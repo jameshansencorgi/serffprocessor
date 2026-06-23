@@ -154,6 +154,55 @@ class EmbeddingChunk(Base):
     embedding_vector_id: Mapped[Optional[str]] = mapped_column(String(255))
 
 
+class FilingSegment(Base):
+    __tablename__ = "filing_segment"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    filing_id: Mapped[int] = mapped_column(ForeignKey("filing.id"), index=True)
+    attachment_id: Mapped[Optional[int]] = mapped_column(ForeignKey("attachment.id"), index=True)
+    segment_index: Mapped[int] = mapped_column(Integer)
+    segment_text: Mapped[str] = mapped_column(Text)
+    page_start: Mapped[Optional[int]] = mapped_column(Integer)
+    page_end: Mapped[Optional[int]] = mapped_column(Integer)
+    is_substantive: Mapped[bool] = mapped_column(Boolean, default=True)
+    function_label: Mapped[str] = mapped_column(String(128), default="unknown")
+    topic_label: Mapped[str] = mapped_column(String(128), default="unknown")
+    classifier_version: Mapped[str] = mapped_column(String(128), default="rules-v0.1")
+
+
+class CorpusRelease(Base):
+    __tablename__ = "corpus_release"
+    __table_args__ = (UniqueConstraint("name", "version", name="uq_corpus_release_name_version"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(128), default="SERFF-LOCUS")
+    version: Mapped[str] = mapped_column(String(64), default="v0.1")
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    selection_method: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    raw_metadata_json: Mapped[Optional[str]] = mapped_column(Text)
+
+
+class HarmonizedFiling(Base):
+    __tablename__ = "harmonized_filing"
+    __table_args__ = (UniqueConstraint("release_id", "state", "line_of_business", "company_name", name="uq_harmonized_scope"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    release_id: Mapped[int] = mapped_column(ForeignKey("corpus_release.id"), index=True)
+    filing_id: Mapped[int] = mapped_column(ForeignKey("filing.id"), index=True)
+    state: Mapped[str] = mapped_column(String(8), index=True)
+    line_of_business: Mapped[str] = mapped_column(String(255), index=True)
+    company_name: Mapped[str] = mapped_column(String(255), index=True)
+    selection_rank: Mapped[int] = mapped_column(Integer, default=1)
+    selection_score: Mapped[float] = mapped_column(Float, default=0)
+    selection_reason: Mapped[str] = mapped_column(Text)
+    page_count: Mapped[int] = mapped_column(Integer, default=0)
+    attachment_count: Mapped[int] = mapped_column(Integer, default=0)
+    fact_count: Mapped[int] = mapped_column(Integer, default=0)
+    segment_count: Mapped[int] = mapped_column(Integer, default=0)
+    raw_metadata_json: Mapped[Optional[str]] = mapped_column(Text)
+
+
 class CoverageSnapshot(Base):
     __tablename__ = "coverage_snapshot"
 

@@ -7,7 +7,9 @@ It follows the same broad pattern as LOCUS:
 - preserve raw source material and provenance
 - normalize messy source metadata into a harmonized access layer
 - parse/OCR heterogeneous documents
+- segment parsed text into analysis units
 - classify documents
+- classify segments by substantive/function/topic labels
 - extract structured facts with evidence
 - build keyword/vector-ready search chunks
 - track coverage and processing quality
@@ -29,6 +31,7 @@ pip install -e ".[dev]"
 serff-intel init-db
 serff-intel import-folder data/raw/filings/TX/ACME-133700001
 serff-intel process-pending
+serff-intel build-release
 serff-intel summary
 serff-intel facts --serff ACME-133700001
 serff-intel search "commercial auto nuclear verdicts trucking"
@@ -82,12 +85,54 @@ Evidence and intelligence:
 
 - `extracted_fact`
 - `regulator_objection`
+- `filing_segment`
 - `embedding_chunk`
 - `coverage_snapshot`
+
+Harmonized release:
+
+- `corpus_release`
+- `harmonized_filing`
 
 Search:
 
 - SQLite FTS5 virtual table `filing_fts`
+
+## LOCUS Structure Mapping
+
+The paper's LOCUS pipeline is:
+
+```text
+raw ordinance PDFs
+  -> OCR to Markdown
+  -> clean / stitch pages
+  -> segment into individual laws
+  -> classify substantivity, function, and topic
+  -> publish a county-harmonized access layer with coverage metadata
+```
+
+This prototype uses the SERFF analog:
+
+```text
+raw SERFF attachments
+  -> parse/OCR-ready page text
+  -> clean / page-level text persistence
+  -> segment into filing/document chunks
+  -> classify substantivity, function, and topic
+  -> extract evidence-backed filing facts
+  -> publish a state/line/company-harmonized access layer with coverage metadata
+```
+
+`build-release` creates the first transparent harmonized access layer. For each
+`(state, line_of_business, company_name)` scope, it selects the most substantial
+processed filing using a reproducible score:
+
+```text
+page_count * 10 + extracted_fact_count + substantive_segment_count
+```
+
+That mirrors LOCUS's deliberately simple "pick the longest representative artifact"
+approach while preserving SERFF provenance and all raw filing attachments.
 
 ## Code Architecture
 

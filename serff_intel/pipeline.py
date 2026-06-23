@@ -7,18 +7,20 @@ from sqlalchemy.orm import Session
 
 from serff_intel import dtos
 from serff_intel.classify.document_classifier import classify_document
+from serff_intel.classify.segment_classifier import classify_segment
 from serff_intel.config import Settings
 from serff_intel.extract.actuarial_reasons import extract_reason_facts
 from serff_intel.extract.entities import extract_metadata_from_text
 from serff_intel.extract.objections import extract_objection_facts
 from serff_intel.extract.rate_impact import extract_rate_facts
-from serff_intel.models import Attachment, DocumentPage, EmbeddingChunk, ExtractedFact, Filing, RegulatorObjection
+from serff_intel.models import Attachment, DocumentPage, EmbeddingChunk, ExtractedFact, Filing, FilingSegment, RegulatorObjection
 from serff_intel.parsing.text_extract import parse_document
 
 
 def process_pending(session: Session, settings: Settings) -> dtos.ProcessingResult:
     attachments_processed = 0
     pages_created = 0
+    segments_created = 0
     facts_created = 0
     chunks_created = 0
     attachments = session.scalars(
@@ -31,6 +33,7 @@ def process_pending(session: Session, settings: Settings) -> dtos.ProcessingResu
         session.execute(delete(DocumentPage).where(DocumentPage.attachment_id == attachment.id))
         session.execute(delete(ExtractedFact).where(ExtractedFact.attachment_id == attachment.id))
         session.execute(delete(EmbeddingChunk).where(EmbeddingChunk.attachment_id == attachment.id))
+        session.execute(delete(FilingSegment).where(FilingSegment.attachment_id == attachment.id))
         full_text_parts: list[str] = []
         for page in parsed.pages:
             full_text_parts.append(page.text)
@@ -85,7 +88,22 @@ def process_pending(session: Session, settings: Settings) -> dtos.ProcessingResu
                             evidence_text=fact.evidence_text,
                         )
                     )
-            for chunk in chunk_text(page.text):
+            for chunk_index, chunk in enumerate(chunk_text(page.text), start=1):
+                segment_classification = classify_segment(chunk)
+                session.add(
+                    FilingSegment(
+                        filing_id=attachment.filing_id,
+                        attachment_id=attachment.id,
+                        segment_index=chunk_index,
+                        segment_text=chunk,
+                        page_start=page.page_number,
+                        page_end=page.page_number,
+                        is_substantive=segment_classification.is_substantive,
+                        function_label=segment_classification.function_label,
+                        topic_label=segment_classification.topic_label,
+                    )
+                )
+                segments_created += 1
                 session.add(
                     EmbeddingChunk(
                         filing_id=attachment.filing_id,
@@ -101,6 +119,7 @@ def process_pending(session: Session, settings: Settings) -> dtos.ProcessingResu
     return dtos.ProcessingResult(
         attachments_processed=attachments_processed,
         pages_created=pages_created,
+        segments_created=segments_created,
         facts_created=facts_created,
         chunks_created=chunks_created,
     )

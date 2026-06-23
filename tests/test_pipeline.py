@@ -6,9 +6,10 @@ from sqlalchemy import select
 
 from serff_intel.config import load_settings
 from serff_intel.ingest.manual_import import import_filing_folder
-from serff_intel.models import ExtractedFact, Filing
+from serff_intel.models import ExtractedFact, Filing, HarmonizedFiling
 from serff_intel.pipeline import process_pending
 from serff_intel.search.query import search
+from serff_intel.services import CorpusReleaseService
 from serff_intel.storage.db import init_db, make_engine, session_factory
 
 
@@ -30,7 +31,13 @@ def test_sample_pipeline(tmp_path: Path) -> None:
         assert filing.serff_tracking_number == "ACME-133700001"
         counts = process_pending(session, settings)
         assert counts.attachments_processed == 2
+        assert counts.segments_created >= 2
         assert counts.facts_created >= 8
+        release = CorpusReleaseService.build_harmonized_release(session)
+        assert release.harmonized_filings_created == 1
+        harmonized = session.scalar(select(HarmonizedFiling))
+        assert harmonized is not None
+        assert harmonized.segment_count >= 2
         requested = session.scalar(
             select(ExtractedFact).where(ExtractedFact.fact_type == "requested_rate_change")
         )

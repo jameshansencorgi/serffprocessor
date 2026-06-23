@@ -5,7 +5,7 @@ from pathlib import Path
 
 from serff_intel.config import load_settings
 from serff_intel.models import Attachment, Filing
-from serff_intel.services import FilingImportService, FilingProcessingService, FilingSearchService, FilingSummaryService
+from serff_intel.services import CorpusReleaseService, FilingImportService, FilingProcessingService, FilingSearchService, FilingSummaryService
 from serff_intel.storage.db import init_db, make_engine, session_factory
 
 
@@ -28,6 +28,10 @@ def main(argv: list[str] | None = None) -> None:
 
     sub.add_parser("process-pending")
     sub.add_parser("build-index")
+
+    release_parser = sub.add_parser("build-release")
+    release_parser.add_argument("--name", default="SERFF-LOCUS")
+    release_parser.add_argument("--version", default="v0.1")
 
     search_parser = sub.add_parser("search")
     search_parser.add_argument("query")
@@ -65,11 +69,18 @@ def main(argv: list[str] | None = None) -> None:
             print(
                 "Processed "
                 f"{result.attachments_processed} attachments, {result.pages_created} pages, "
+                f"{result.segments_created} segments, "
                 f"{result.facts_created} facts, {result.chunks_created} chunks"
             )
         elif args.command == "build-index":
             count = FilingProcessingService.rebuild_search_index(session)
             print(f"Indexed {count} pages")
+        elif args.command == "build-release":
+            result = CorpusReleaseService.build_harmonized_release(session, name=args.name, version=args.version)
+            print(
+                f"Built release_id={result.release_id}: "
+                f"{result.harmonized_filings_created} harmonized filings across {result.scopes_seen} scopes"
+            )
         elif args.command == "search":
             hits = FilingSearchService.search(session, args.query, args.limit)
             for hit in hits:
@@ -92,6 +103,7 @@ def main(argv: list[str] | None = None) -> None:
             result = FilingSummaryService.get_summary(session)
             print(f"Filings: {result.filings}")
             print(f"Attachments: {result.attachments}")
+            print(f"Segments: {result.segments}")
             print(f"Extracted facts: {result.extracted_facts}")
 
 
