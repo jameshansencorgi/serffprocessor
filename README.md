@@ -105,6 +105,7 @@ The MVP extracts:
 
 - requested, approved, indicated, and selected rate changes
 - written premium impact
+- loss cost multiplier
 - loss trend
 - expense provision
 - profit provision

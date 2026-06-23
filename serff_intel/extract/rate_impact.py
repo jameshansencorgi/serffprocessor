@@ -13,7 +13,8 @@ RATE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("written_premium_impact", re.compile(r"written\s+premium\s+impact[^\n$0-9-]{0,80}(\$?-?\d[\d,]*(?:\.\d+)?)", re.I)),
     ("loss_trend", re.compile(r"loss\s+trend[^\n%]{0,80}?(-?\d+(?:\.\d+)?)\s?%", re.I)),
     ("expense_provision", re.compile(r"expense\s+provision[^\n%]{0,80}?(-?\d+(?:\.\d+)?)\s?%", re.I)),
-    ("profit_provision", re.compile(r"profit(?:\s+and\s+contingenc(?:y|ies)|\s+provision)?[^\n%]{0,80}?(-?\d+(?:\.\d+)?)\s?%", re.I)),
+    ("profit_provision", re.compile(r"(?:selected\s+underwriting\s+profit\s+provision|profit\s+load|underwriting\s+profit\s+provision|profit\s+provision)[^\n%]{0,80}?(-?\d+(?:\.\d+)?)\s?%", re.I)),
+    ("loss_cost_multiplier", re.compile(r"(?:loss\s+cost\s+multiplier|LCM)[^\n]{0,120}?(\d+\.\d{2,4})", re.I)),
 ]
 
 
@@ -42,4 +43,3 @@ def _normalize_percent_or_money(value: str) -> str:
 
 def _window(text: str, start: int, end: int, radius: int = 180) -> str:
     return " ".join(text[max(0, start - radius) : min(len(text), end + radius)].split())
-
