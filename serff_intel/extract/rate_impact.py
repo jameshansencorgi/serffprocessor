@@ -14,8 +14,10 @@ RATE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("loss_trend", re.compile(r"loss\s+trend[^\n%]{0,80}?(-?\d+(?:\.\d+)?)\s?%", re.I)),
     ("expense_provision", re.compile(r"expense\s+provision[^\n%]{0,80}?(-?\d+(?:\.\d+)?)\s?%", re.I)),
     ("profit_provision", re.compile(r"(?:selected\s+underwriting\s+profit\s+provision|profit\s+load|underwriting\s+profit\s+provision|profit\s+provision)[^\n%]{0,80}?(-?\d+(?:\.\d+)?)\s?%", re.I)),
-    ("loss_cost_multiplier", re.compile(r"(?:loss\s+cost\s+multiplier|LCM)[^\n]{0,120}?(\d+\.\d{2,4})", re.I)),
 ]
+
+LCM_RE = re.compile(r"(?:loss\s+cost\s+multiplier|LCM)[^\n]{0,160}", re.I)
+DECIMAL_RE = re.compile(r"\d+\.\d{2,4}")
 
 
 def extract_rate_facts(text: str, page_number: int | None = None) -> list[EvidenceFact]:
@@ -34,6 +36,35 @@ def extract_rate_facts(text: str, page_number: int | None = None) -> list[Eviden
                     extraction_method="regex:rate_impact",
                 )
             )
+    facts.extend(_extract_lcm_facts(text, page_number))
+    return facts
+
+
+def _extract_lcm_facts(text: str, page_number: int | None = None) -> list[EvidenceFact]:
+    facts: list[EvidenceFact] = []
+    seen: set[tuple[str, str]] = set()
+    for match in LCM_RE.finditer(text):
+        snippet = match.group(0)
+        decimals = DECIMAL_RE.findall(snippet)
+        if not decimals:
+            continue
+        value = decimals[-1]
+        evidence = _window(text, match.start(), match.end())
+        key = (value, evidence)
+        if key in seen:
+            continue
+        seen.add(key)
+        facts.append(
+            EvidenceFact(
+                fact_type="loss_cost_multiplier",
+                fact_value=value,
+                normalized_value=value,
+                confidence=0.78,
+                evidence_text=evidence,
+                page_number=page_number,
+                extraction_method="regex:rate_impact",
+            )
+        )
     return facts
 
 
