@@ -1,0 +1,146 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+from sqlalchemy import delete, select, text
+from sqlalchemy.orm import Session
+
+from serff_intel import dtos
+from serff_intel.classify.document_classifier import classify_document
+from serff_intel.config import Settings
+from serff_intel.extract.actuarial_reasons import extract_reason_facts
+from serff_intel.extract.entities import extract_metadata_from_text
+from serff_intel.extract.objections import extract_objection_facts
+from serff_intel.extract.rate_impact import extract_rate_facts
+from serff_intel.models import Attachment, DocumentPage, EmbeddingChunk, ExtractedFact, Filing, RegulatorObjection
+from serff_intel.parsing.text_extract import parse_document
+
+
+def process_pending(session: Session, settings: Settings) -> dtos.ProcessingResult:
+    attachments_processed = 0
+    pages_created = 0
+    facts_created = 0
+    chunks_created = 0
+    attachments = session.scalars(
+        select(Attachment).where(Attachment.parse_status.in_(["pending", "failed"]))
+    ).all()
+    settings.text_dir.mkdir(parents=True, exist_ok=True)
+    for attachment in attachments:
+        attachments_processed += 1
+        parsed = parse_document(Path(attachment.local_path))
+        session.execute(delete(DocumentPage).where(DocumentPage.attachment_id == attachment.id))
+        session.execute(delete(ExtractedFact).where(ExtractedFact.attachment_id == attachment.id))
+        session.execute(delete(EmbeddingChunk).where(EmbeddingChunk.attachment_id == attachment.id))
+        full_text_parts: list[str] = []
+        for page in parsed.pages:
+            full_text_parts.append(page.text)
+            session.add(
+                DocumentPage(
+                    attachment_id=attachment.id,
+                    page_number=page.page_number,
+                    text=page.text,
+                    ocr_confidence=None,
+                    layout_json=None,
+                )
+            )
+            pages_created += 1
+        full_text = "\n\n".join(full_text_parts)
+        classification = classify_document(attachment.filename, full_text)
+        attachment.document_class = classification.document_class
+        attachment.page_count = len(parsed.pages)
+        attachment.ocr_used = any(page.ocr_used for page in parsed.pages)
+        attachment.parse_status = "parsed" if parsed.pages and not parsed.failures else "failed"
+        text_path = settings.text_dir / f"attachment_{attachment.id}.txt"
+        text_path.write_text(full_text)
+        attachment.parsed_text_path = str(text_path)
+        _backfill_filing_metadata(session, attachment, full_text)
+        for page in parsed.pages:
+            facts = []
+            facts.extend(extract_rate_facts(page.text, page.page_number))
+            facts.extend(extract_reason_facts(page.text, page.page_number))
+            facts.extend(extract_objection_facts(page.text, page.page_number))
+            for fact in facts:
+                session.add(
+                    ExtractedFact(
+                        filing_id=attachment.filing_id,
+                        attachment_id=attachment.id,
+                        fact_type=fact.fact_type,
+                        fact_value=fact.fact_value,
+                        normalized_value=fact.normalized_value,
+                        confidence=fact.confidence,
+                        evidence_text=fact.evidence_text,
+                        page_number=fact.page_number,
+                        extraction_method=fact.extraction_method,
+                    )
+                )
+                facts_created += 1
+                if fact.fact_type == "regulator_objection":
+                    session.add(
+                        RegulatorObjection(
+                            filing_id=attachment.filing_id,
+                            attachment_id=attachment.id,
+                            topic="general",
+                            objection_text=fact.fact_value,
+                            resolved_bool=False,
+                            evidence_text=fact.evidence_text,
+                        )
+                    )
+            for chunk in chunk_text(page.text):
+                session.add(
+                    EmbeddingChunk(
+                        filing_id=attachment.filing_id,
+                        attachment_id=attachment.id,
+                        page_number=page.page_number,
+                        chunk_text=chunk,
+                        chunk_type="text",
+                    )
+                )
+                chunks_created += 1
+        session.commit()
+    rebuild_fts(session)
+    return dtos.ProcessingResult(
+        attachments_processed=attachments_processed,
+        pages_created=pages_created,
+        facts_created=facts_created,
+        chunks_created=chunks_created,
+    )
+
+
+def rebuild_fts(session: Session) -> int:
+    session.execute(text("DELETE FROM filing_fts"))
+    pages = session.execute(
+        select(DocumentPage, Attachment.filing_id).join(Attachment, Attachment.id == DocumentPage.attachment_id)
+    ).all()
+    for page, filing_id in pages:
+        session.execute(
+            text("INSERT INTO filing_fts(filing_id, attachment_id, page_number, text) VALUES (:f, :a, :p, :t)"),
+            {"f": filing_id, "a": page.attachment_id, "p": page.page_number, "t": page.text},
+        )
+    session.commit()
+    return len(pages)
+
+
+def chunk_text(text_value: str, max_chars: int = 1400, overlap: int = 180) -> list[str]:
+    text_value = " ".join(text_value.split())
+    if not text_value:
+        return []
+    chunks: list[str] = []
+    start = 0
+    while start < len(text_value):
+        end = min(len(text_value), start + max_chars)
+        chunks.append(text_value[start:end])
+        if end == len(text_value):
+            break
+        start = max(0, end - overlap)
+    return chunks
+
+
+def _backfill_filing_metadata(session: Session, attachment: Attachment, text_value: str) -> None:
+    filing = session.get(Filing, attachment.filing_id)
+    if not filing:
+        return
+    metadata = extract_metadata_from_text(text_value)
+    if metadata.get("company_name") and not filing.company_name:
+        filing.company_name = metadata["company_name"]
+    if metadata.get("naic_company_code") and not filing.naic_company_code:
+        filing.naic_company_code = metadata["naic_company_code"]

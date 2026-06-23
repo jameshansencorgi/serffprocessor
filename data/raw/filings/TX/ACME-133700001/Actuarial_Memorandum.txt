@@ -1,0 +1,15 @@
+SERFF Tracking Number: ACME-133700001
+Company Name: Acme Mutual Insurance Company
+NAIC Company Code: 12345
+Line of Business: Commercial Auto / Trucking
+
+Actuarial Memorandum
+
+The company requests an overall rate change of 12.4% for its Texas commercial auto trucking program.
+The indicated rate level change is 15.8%, and the selected rate level change is 12.4%.
+The filing cites claim severity, claim frequency, social inflation, litigation, and nuclear verdict activity
+as drivers of deteriorating experience in long-haul trucking. The selected annual loss trend is 6.5%.
+The expense provision is 28.0% and the profit provision is 5.0%.
+
+Written premium impact: $4,250,000.
+
