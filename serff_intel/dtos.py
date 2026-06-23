@@ -17,6 +17,13 @@ class ManifestImportResult:
 
 
 @dataclass(frozen=True)
+class CompSearchImportResult:
+    rows_seen: int
+    filing_bundles_created: int
+    attachments_created: int
+
+
+@dataclass(frozen=True)
 class ProcessingResult:
     attachments_processed: int
     pages_created: int
@@ -30,6 +37,12 @@ class ReleaseBuildResult:
     release_id: int
     scopes_seen: int
     harmonized_filings_created: int
+
+
+@dataclass(frozen=True)
+class ExportResult:
+    files_written: int
+    rows_written: int
 
 
 @dataclass(frozen=True)

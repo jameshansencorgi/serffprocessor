@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 
 from serff_intel import dtos
 from serff_intel.config import Settings
+from serff_intel.export import export_actuarial_tables, export_review_csv
+from serff_intel.ingest.comp_search import import_comp_search_run
 from serff_intel.ingest.manual_import import discover_filing_folders, import_filing_folder, import_s3_manifest
 from serff_intel.models import Attachment, CorpusRelease, ExtractedFact, Filing, FilingSegment, HarmonizedFiling
 from serff_intel.pipeline import process_pending, rebuild_fts
@@ -28,6 +30,10 @@ class FilingImportService:
     @staticmethod
     def import_manifest(session: Session, manifest_csv: Path) -> dtos.ManifestImportResult:
         return import_s3_manifest(session, manifest_csv)
+
+    @staticmethod
+    def import_comp_search_run(session: Session, results_json: Path) -> dtos.CompSearchImportResult:
+        return import_comp_search_run(session, results_json)
 
 
 class FilingProcessingService:
@@ -124,6 +130,16 @@ class FilingSearchService:
     @staticmethod
     def search(session: Session, query: str, limit: int = 10) -> list[dtos.SearchHit]:
         return search(session, query, limit)
+
+
+class FilingExportService:
+    @staticmethod
+    def export_actuarial(session: Session, out_dir: Path) -> dtos.ExportResult:
+        return export_actuarial_tables(session, out_dir)
+
+    @staticmethod
+    def export_review(session: Session, output_path: Path, limit: int | None = None) -> dtos.ExportResult:
+        return export_review_csv(session, output_path, limit)
 
 
 class FilingSummaryService:

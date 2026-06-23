@@ -32,6 +32,8 @@ serff-intel init-db
 serff-intel import-folder data/raw/filings/TX/ACME-133700001
 serff-intel process-pending
 serff-intel build-release
+serff-intel export-actuarial data/exports/actuarial
+serff-intel export-review data/exports/review/facts_to_review.csv
 serff-intel summary
 serff-intel facts --serff ACME-133700001
 serff-intel search "commercial auto nuclear verdicts trucking"
@@ -192,6 +194,50 @@ TX,ACME-133700001,my-serff-bucket,tx/ACME-133700001/Actuarial_Memorandum.pdf,/lo
 ```
 
 Optional columns include `company_name`, `line_of_business`, `file_type`, `content_type`, and `etag`.
+
+If you used the Doghouse `serff-comp-search` skill, import its native run output directly:
+
+```bash
+serff-intel import-comp-search-run ~/.serff-comp-search/runs/<run_id>/results.json
+```
+
+This preserves the comp-search filing metadata and dedupes repeated SERFF attachment references by local path and file hash.
+
+## Analysis Exports
+
+Create normalized actuarial CSVs:
+
+```bash
+serff-intel export-actuarial data/exports/actuarial
+```
+
+Files written:
+
+- `filings.csv`
+- `attachments.csv`
+- `rate_changes.csv`
+- `loss_cost_multipliers.csv`
+- `provisions.csv`
+- `objections.csv`
+- `segments.csv`
+- `harmonized_filings.csv`
+
+Create a human review queue:
+
+```bash
+serff-intel export-review data/exports/review/facts_to_review.csv --limit 500
+```
+
+The review CSV includes evidence, confidence, and blank `accepted`, `corrected_value`, and `notes` columns.
+
+## MVP Acceptance Criteria
+
+- `pytest -q` passes.
+- `import-comp-search-run` can ingest a real `serff-comp-search` `results.json`.
+- `process-pending` parses every supported attachment without crashing.
+- `build-release` creates at least one harmonized row when filings exist.
+- `export-actuarial` writes the normalized CSV set.
+- `export-review` writes an evidence-backed review queue.
 
 ## Tests
 

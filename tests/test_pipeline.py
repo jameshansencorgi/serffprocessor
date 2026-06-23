@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 
 from sqlalchemy import select
 
 from serff_intel.config import load_settings
+from serff_intel.export import export_actuarial_tables, export_review_csv
+from serff_intel.ingest.comp_search import import_comp_search_run
 from serff_intel.ingest.manual_import import import_filing_folder
-from serff_intel.models import ExtractedFact, Filing, HarmonizedFiling
+from serff_intel.models import Attachment, ExtractedFact, Filing, HarmonizedFiling
 from serff_intel.pipeline import process_pending
 from serff_intel.search.query import search
 from serff_intel.services import CorpusReleaseService
@@ -48,3 +51,75 @@ def test_sample_pipeline(tmp_path: Path) -> None:
         stored = session.scalar(select(Filing).where(Filing.serff_tracking_number == "ACME-133700001"))
         assert stored is not None
         assert stored.company_name == "Acme Mutual Insurance Company"
+
+
+def test_comp_search_import_and_exports(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    settings = load_settings(root)
+    settings = settings.__class__(
+        root_dir=root,
+        db_url=f"sqlite:///{tmp_path / 'serff.sqlite'}",
+        raw_dir=settings.raw_dir,
+        processed_dir=tmp_path / "processed",
+    )
+    attachment_path = tmp_path / "Actuarial Memo.txt"
+    attachment_path.write_text(
+        "SERFF Tracking Number: TEST-134000001\n"
+        "Company Name: Test Carrier\n"
+        "Actuarial Memorandum\n"
+        "The requested rate change is 7.5%.\n"
+        "Loss Cost Multiplier Q / P 1.234\n"
+        "Underwriting Profit Provision 8.0%.\n"
+    )
+    results_path = tmp_path / "results.json"
+    results_path.write_text(json.dumps(_comp_search_payload(attachment_path)))
+    engine = make_engine(settings)
+    init_db(engine)
+    Session = session_factory(engine)
+
+    with Session() as session:
+        imported = import_comp_search_run(session, results_path)
+        assert imported.rows_seen == 1
+        assert imported.filing_bundles_created == 1
+        assert imported.attachments_created == 1
+        assert session.scalar(select(Attachment)) is not None
+        processed = process_pending(session, settings)
+        assert processed.facts_created >= 3
+        CorpusReleaseService.build_harmonized_release(session)
+        actuarial_export = export_actuarial_tables(session, tmp_path / "exports")
+        review_export = export_review_csv(session, tmp_path / "review" / "facts.csv")
+        assert actuarial_export.files_written == 8
+        assert actuarial_export.rows_written > 0
+        assert review_export.rows_written > 0
+        assert (tmp_path / "exports" / "rate_changes.csv").read_text().count("requested_rate_change") == 1
+        assert "corrected_value" in (tmp_path / "review" / "facts.csv").read_text()
+
+
+def _comp_search_payload(attachment_path: Path) -> dict:
+    return {
+        "run_id": "test-run",
+        "filings": [
+            {
+                "tracking_number": "TEST-134000001",
+                "filing_id": "134000001",
+                "state": "TX",
+                "carrier": "Test Carrier",
+                "naic_code": "99999",
+                "business_type": "P&C",
+                "toi": "20.0 Commercial Auto",
+                "sub_toi": "20.0000 Commercial Auto Combinations",
+                "filing_type": "Rate/Rule",
+                "filing_status": "Approved",
+                "submission_date": "01/15/2026",
+                "disposition_date": "02/01/2026",
+                "attachments": [
+                    {
+                        "section": "Supporting Documentation",
+                        "form_name": "Actuarial Memorandum",
+                        "filename": attachment_path.name,
+                        "local_path": str(attachment_path),
+                    }
+                ],
+            }
+        ],
+    }

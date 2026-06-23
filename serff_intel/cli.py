@@ -5,7 +5,14 @@ from pathlib import Path
 
 from serff_intel.config import load_settings
 from serff_intel.models import Attachment, Filing
-from serff_intel.services import CorpusReleaseService, FilingImportService, FilingProcessingService, FilingSearchService, FilingSummaryService
+from serff_intel.services import (
+    CorpusReleaseService,
+    FilingExportService,
+    FilingImportService,
+    FilingProcessingService,
+    FilingSearchService,
+    FilingSummaryService,
+)
 from serff_intel.storage.db import init_db, make_engine, session_factory
 
 
@@ -26,6 +33,9 @@ def main(argv: list[str] | None = None) -> None:
     manifest_parser = sub.add_parser("import-s3-manifest")
     manifest_parser.add_argument("manifest_csv")
 
+    comp_parser = sub.add_parser("import-comp-search-run")
+    comp_parser.add_argument("results_json")
+
     sub.add_parser("process-pending")
     sub.add_parser("build-index")
 
@@ -40,6 +50,13 @@ def main(argv: list[str] | None = None) -> None:
     facts_parser = sub.add_parser("facts")
     facts_parser.add_argument("--serff")
     facts_parser.add_argument("--limit", type=int, default=50)
+
+    export_parser = sub.add_parser("export-actuarial")
+    export_parser.add_argument("out_dir")
+
+    review_parser = sub.add_parser("export-review")
+    review_parser.add_argument("output_csv")
+    review_parser.add_argument("--limit", type=int)
 
     sub.add_parser("summary")
 
@@ -62,6 +79,12 @@ def main(argv: list[str] | None = None) -> None:
             result = FilingImportService.import_manifest(session, Path(args.manifest_csv))
             print(
                 f"Imported {result.rows_seen} manifest rows, "
+                f"{result.filing_bundles_created} new filing bundles, {result.attachments_created} new attachments"
+            )
+        elif args.command == "import-comp-search-run":
+            result = FilingImportService.import_comp_search_run(session, Path(args.results_json))
+            print(
+                f"Imported {result.rows_seen} comp-search attachment rows, "
                 f"{result.filing_bundles_created} new filing bundles, {result.attachments_created} new attachments"
             )
         elif args.command == "process-pending":
@@ -99,6 +122,12 @@ def main(argv: list[str] | None = None) -> None:
                     f"{fact.fact_type}={fact.fact_value!r} "
                     f"conf={fact.confidence:.2f} page={fact.page_number} evidence={fact.evidence_text[:180]!r}"
                 )
+        elif args.command == "export-actuarial":
+            result = FilingExportService.export_actuarial(session, Path(args.out_dir))
+            print(f"Exported {result.rows_written} rows across {result.files_written} actuarial CSV files")
+        elif args.command == "export-review":
+            result = FilingExportService.export_review(session, Path(args.output_csv), limit=args.limit)
+            print(f"Exported {result.rows_written} review rows to {args.output_csv}")
         elif args.command == "summary":
             result = FilingSummaryService.get_summary(session)
             print(f"Filings: {result.filings}")
