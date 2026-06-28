@@ -4,13 +4,16 @@ from pathlib import Path
 import json
 
 from sqlalchemy import select
+import yaml
 
 from serff_intel.classify.document_classifier import classify_document
 from serff_intel.config import load_settings
 from serff_intel.export import export_actuarial_tables, export_review_csv
+from serff_intel.extract.rate_impact import extract_rate_facts
+from serff_intel.extract.tables import extract_table_candidates
 from serff_intel.ingest.comp_search import import_comp_search_run
 from serff_intel.ingest.manual_import import import_filing_folder
-from serff_intel.models import Attachment, AttachmentParseDecision, ExtractedFact, Filing, HarmonizedFiling
+from serff_intel.models import Attachment, AttachmentParseDecision, ExtractedFact, ExtractedTable, Filing, HarmonizedFiling
 from serff_intel.pipeline import process_pending
 from serff_intel.parsing.router import decide_parse_route
 from serff_intel.parsing.text_extract import PageText
@@ -49,6 +52,8 @@ def test_sample_pipeline(tmp_path: Path) -> None:
         )
         assert requested is not None
         assert requested.normalized_value == "12.4"
+        assert requested.role == "requested"
+        assert requested.snapshot_filing_id == filing.id
         hits = search(session, "nuclear verdicts trucking", limit=5)
         assert hits
         stored = session.scalar(select(Filing).where(Filing.serff_tracking_number == "ACME-133700001"))
@@ -73,6 +78,9 @@ def test_comp_search_import_and_exports(tmp_path: Path) -> None:
         "The requested rate change is 7.5%.\n"
         "Loss Cost Multiplier Q / P 1.234\n"
         "Underwriting Profit Provision 8.0%.\n"
+        "Coverage  Premium  Loss  Ratio\n"
+        "AL        100000   65000 65%\n"
+        "APD       80000    52000 65%\n"
     )
     results_path = tmp_path / "results.json"
     results_path.write_text(json.dumps(_comp_search_payload(attachment_path)))
@@ -88,6 +96,7 @@ def test_comp_search_import_and_exports(tmp_path: Path) -> None:
         assert session.scalar(select(Attachment)) is not None
         processed = process_pending(session, settings)
         assert processed.facts_created >= 3
+        assert session.scalar(select(ExtractedTable)) is not None
         decision = session.scalar(select(AttachmentParseDecision))
         assert decision is not None
         assert decision.extraction_route == "plain_text_or_unknown"
@@ -95,12 +104,15 @@ def test_comp_search_import_and_exports(tmp_path: Path) -> None:
         CorpusReleaseService.build_harmonized_release(session)
         actuarial_export = export_actuarial_tables(session, tmp_path / "exports")
         review_export = export_review_csv(session, tmp_path / "review" / "facts.csv")
-        assert actuarial_export.files_written == 8
+        assert actuarial_export.files_written == 10
         assert actuarial_export.rows_written > 0
         assert review_export.rows_written > 0
         assert (tmp_path / "exports" / "rate_changes.csv").read_text().count("requested_rate_change") == 1
         assert "corrected_value" in (tmp_path / "review" / "facts.csv").read_text()
         assert "extraction_route" in (tmp_path / "exports" / "attachments.csv").read_text()
+        assert "role" in (tmp_path / "exports" / "loss_cost_multipliers.csv").read_text()
+        assert (tmp_path / "exports" / "extracted_tables.csv").exists()
+        assert (tmp_path / "exports" / "extracted_table_cells.csv").exists()
 
 
 def test_serff_specific_document_classification() -> None:
@@ -170,6 +182,61 @@ def test_parse_decision_tree_flags_tables_ocr_and_store_only() -> None:
     )
     assert store_decision.extraction_route == "native_text_store_only"
     assert store_decision.value_tier == "store_only"
+
+
+def test_fact_catalogue_enforces_role_table_and_snapshot_fields() -> None:
+    root = Path(__file__).resolve().parents[1]
+    catalogue = yaml.safe_load((root / "docs/fact_catalogue.yml").read_text())
+    fields = set(catalogue["default_provenance_fields"])
+    for field in (
+        "role",
+        "table_id",
+        "row_label",
+        "col_label",
+        "cell_address",
+        "snapshot_filing_id",
+        "effective_start_date",
+        "supersedes_fact_id",
+        "supersession_status",
+    ):
+        assert field in fields
+    allowed_roles = set(catalogue["role_enum"])
+    for group in catalogue["fact_groups"].values():
+        for fact in group["facts"].values():
+            for role in fact.get("roles", []):
+                assert role in allowed_roles
+
+
+def test_rate_extractor_normalizes_roles_and_review_flags() -> None:
+    facts = extract_rate_facts(
+        "Indicated Loss Cost Multiplier = 2.002\n"
+        "Indicated Loss Cost Multiplier Offset for Risk Load 1.901\n"
+        "Selected Loss Cost Multiplier 1.901\n"
+        "Loss Cost Multiplier Q / P 1.234\n"
+        "Selected underwriting profit provision 9.0%\n",
+        page_number=1,
+    )
+    lcms = [fact for fact in facts if fact.fact_type == "loss_cost_multiplier"]
+    assert any(fact.normalized_value == "2.002" and fact.role == "indicated" for fact in lcms)
+    assert any(fact.normalized_value == "1.901" and fact.role == "offset" for fact in lcms)
+    assert any(fact.normalized_value == "1.901" and fact.role == "selected" for fact in lcms)
+    ambiguous = [fact for fact in lcms if fact.normalized_value == "1.234"]
+    assert ambiguous
+    assert ambiguous[0].role == "unknown"
+    assert ambiguous[0].needs_review is True
+    assert any(fact.fact_type == "profit_provision" and fact.role == "selected" for fact in facts)
+
+
+def test_table_extraction_keeps_row_column_structure() -> None:
+    tables = extract_table_candidates(
+        "Coverage  Premium  Loss  Ratio\n"
+        "AL        100000   65000 65%\n"
+        "APD       80000    52000 65%\n"
+    )
+    assert len(tables) == 1
+    assert tables[0].needs_review is True
+    assert tables[0].rows[1][0] == "AL"
+    assert tables[0].rows[1][1] == "100000"
 
 
 def _comp_search_payload(attachment_path: Path) -> dict:

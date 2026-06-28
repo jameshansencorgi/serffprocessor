@@ -10,14 +10,18 @@ from serff_intel.classify.document_classifier import classify_document
 from serff_intel.classify.segment_classifier import classify_segment
 from serff_intel.config import Settings
 from serff_intel.extract.actuarial_reasons import extract_reason_facts
+from serff_intel.extract.context import infer_coverage
 from serff_intel.extract.entities import extract_metadata_from_text
 from serff_intel.extract.objections import extract_objection_facts
 from serff_intel.extract.rate_impact import extract_rate_facts
+from serff_intel.extract.tables import cell_address, cell_labels, extract_table_candidates
 from serff_intel.models import (
     Attachment,
     AttachmentParseDecision,
     DocumentPage,
     EmbeddingChunk,
+    ExtractedTable,
+    ExtractedTableCell,
     ExtractedFact,
     Filing,
     FilingSegment,
@@ -42,6 +46,10 @@ def process_pending(session: Session, settings: Settings) -> dtos.ProcessingResu
         parsed = parse_document(Path(attachment.local_path))
         session.execute(delete(DocumentPage).where(DocumentPage.attachment_id == attachment.id))
         session.execute(delete(ExtractedFact).where(ExtractedFact.attachment_id == attachment.id))
+        table_ids = session.scalars(select(ExtractedTable.id).where(ExtractedTable.attachment_id == attachment.id)).all()
+        if table_ids:
+            session.execute(delete(ExtractedTableCell).where(ExtractedTableCell.table_id.in_(table_ids)))
+        session.execute(delete(ExtractedTable).where(ExtractedTable.attachment_id == attachment.id))
         session.execute(delete(EmbeddingChunk).where(EmbeddingChunk.attachment_id == attachment.id))
         session.execute(delete(FilingSegment).where(FilingSegment.attachment_id == attachment.id))
         session.execute(delete(AttachmentParseDecision).where(AttachmentParseDecision.attachment_id == attachment.id))
@@ -93,7 +101,10 @@ def process_pending(session: Session, settings: Settings) -> dtos.ProcessingResu
             facts.extend(extract_rate_facts(page.text, page.page_number))
             facts.extend(extract_reason_facts(page.text, page.page_number))
             facts.extend(extract_objection_facts(page.text, page.page_number))
+            _persist_tables(session, attachment, page.page_number, page.text)
+            inferred_coverage = infer_coverage(attachment.filename, page.text)
             for fact in facts:
+                coverage = fact.coverage or inferred_coverage
                 session.add(
                     ExtractedFact(
                         filing_id=attachment.filing_id,
@@ -101,9 +112,31 @@ def process_pending(session: Session, settings: Settings) -> dtos.ProcessingResu
                         fact_type=fact.fact_type,
                         fact_value=fact.fact_value,
                         normalized_value=fact.normalized_value,
+                        unit=fact.unit,
+                        coverage=coverage,
+                        role=fact.role,
+                        scope=fact.scope,
+                        territory=fact.territory,
                         confidence=fact.confidence,
+                        needs_review=fact.needs_review,
                         evidence_text=fact.evidence_text,
                         page_number=fact.page_number,
+                        table_id=fact.table_id,
+                        table_cell_id=fact.table_cell_id,
+                        table_name=fact.table_name,
+                        table_kind=fact.table_kind,
+                        row_label=fact.row_label,
+                        row_key=fact.row_key,
+                        col_label=fact.col_label,
+                        col_key=fact.col_key,
+                        cell_address=fact.cell_address,
+                        table_locator_text=fact.table_locator_text,
+                        effective_start_date=None,
+                        effective_end_date=None,
+                        snapshot_filing_id=attachment.filing_id,
+                        supersedes_fact_id=fact.supersedes_fact_id,
+                        superseded_by_fact_id=fact.superseded_by_fact_id,
+                        supersession_status=fact.supersession_status,
                         extraction_method=fact.extraction_method,
                     )
                 )
@@ -183,6 +216,42 @@ def chunk_text(text_value: str, max_chars: int = 1400, overlap: int = 180) -> li
             break
         start = max(0, end - overlap)
     return chunks
+
+
+def _persist_tables(session: Session, attachment: Attachment, page_number: int, text_value: str) -> None:
+    for candidate in extract_table_candidates(text_value):
+        table = ExtractedTable(
+            filing_id=attachment.filing_id,
+            attachment_id=attachment.id,
+            page_number=page_number,
+            table_index=candidate.table_index,
+            table_name=candidate.table_name,
+            table_kind=candidate.table_kind,
+            confidence=candidate.confidence,
+            needs_review=candidate.needs_review,
+            locator_text=candidate.locator_text,
+        )
+        session.add(table)
+        session.flush()
+        for row_index, row in enumerate(candidate.rows, start=1):
+            for col_index, raw_value in enumerate(row, start=1):
+                row_label, row_key, col_label, col_key = cell_labels(candidate.rows, row_index, col_index)
+                session.add(
+                    ExtractedTableCell(
+                        table_id=table.id,
+                        row_index=row_index,
+                        col_index=col_index,
+                        row_label=row_label,
+                        row_key=row_key,
+                        col_label=col_label,
+                        col_key=col_key,
+                        cell_address=cell_address(row_index, col_index),
+                        raw_value=raw_value,
+                        normalized_value=raw_value.replace(",", "").replace("$", "").replace("%", ""),
+                        confidence=candidate.confidence,
+                        needs_review=True,
+                    )
+                )
 
 
 def _backfill_filing_metadata(session: Session, attachment: Attachment, text_value: str) -> None:

@@ -7,7 +7,16 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from serff_intel import dtos
-from serff_intel.models import Attachment, AttachmentParseDecision, ExtractedFact, Filing, FilingSegment, HarmonizedFiling
+from serff_intel.models import (
+    Attachment,
+    AttachmentParseDecision,
+    ExtractedFact,
+    ExtractedTable,
+    ExtractedTableCell,
+    Filing,
+    FilingSegment,
+    HarmonizedFiling,
+)
 
 RATE_CHANGE_FACTS = {"requested_rate_change", "approved_rate_change", "indicated_rate_level_change", "selected_rate_level_change"}
 LCM_FACTS = {"loss_cost_multiplier"}
@@ -25,6 +34,8 @@ def export_actuarial_tables(session: Session, out_dir: Path) -> dtos.ExportResul
         "provisions.csv": _fact_rows(session, PROVISION_FACTS),
         "objections.csv": _fact_rows(session, OBJECTION_FACTS),
         "segments.csv": _segment_rows(session),
+        "extracted_tables.csv": _table_rows(session),
+        "extracted_table_cells.csv": _table_cell_rows(session),
         "harmonized_filings.csv": _harmonized_rows(session),
     }
     rows_written = 0
@@ -147,8 +158,25 @@ def _fact_row(fact: ExtractedFact, filing: Filing, attachment: Attachment | None
         "fact_type": fact.fact_type,
         "fact_value": fact.fact_value,
         "normalized_value": fact.normalized_value,
+        "unit": fact.unit,
+        "coverage": fact.coverage,
+        "role": fact.role,
+        "scope": fact.scope,
+        "territory": fact.territory,
         "confidence": fact.confidence,
+        "needs_review": fact.needs_review,
         "page_number": fact.page_number,
+        "table_id": fact.table_id,
+        "table_cell_id": fact.table_cell_id,
+        "table_name": fact.table_name,
+        "table_kind": fact.table_kind,
+        "row_label": fact.row_label,
+        "col_label": fact.col_label,
+        "cell_address": fact.cell_address,
+        "effective_start_date": fact.effective_start_date,
+        "effective_end_date": fact.effective_end_date,
+        "snapshot_filing_id": fact.snapshot_filing_id,
+        "supersession_status": fact.supersession_status,
         "evidence_text": fact.evidence_text,
         "extraction_method": fact.extraction_method,
     }
@@ -208,6 +236,74 @@ def _harmonized_rows(session: Session) -> list[dict[str, object]]:
                 "attachment_count": harmonized.attachment_count,
                 "fact_count": harmonized.fact_count,
                 "segment_count": harmonized.segment_count,
+            }
+        )
+    return rows
+
+
+def _table_rows(session: Session) -> list[dict[str, object]]:
+    rows: list[dict[str, object]] = []
+    query = (
+        select(ExtractedTable, Filing, Attachment)
+        .join(Filing, Filing.id == ExtractedTable.filing_id)
+        .join(Attachment, Attachment.id == ExtractedTable.attachment_id)
+        .order_by(Filing.state, Filing.serff_tracking_number, ExtractedTable.id)
+    )
+    for table, filing, attachment in session.execute(query):
+        rows.append(
+            {
+                "table_id": table.id,
+                "filing_id": filing.id,
+                "attachment_id": attachment.id,
+                "serff_tracking_number": filing.serff_tracking_number,
+                "state": filing.state,
+                "company_name": filing.company_name,
+                "filename": attachment.filename,
+                "page_number": table.page_number,
+                "table_index": table.table_index,
+                "table_name": table.table_name,
+                "table_kind": table.table_kind,
+                "confidence": table.confidence,
+                "needs_review": table.needs_review,
+                "locator_text": table.locator_text,
+            }
+        )
+    return rows
+
+
+def _table_cell_rows(session: Session) -> list[dict[str, object]]:
+    rows: list[dict[str, object]] = []
+    query = (
+        select(ExtractedTableCell, ExtractedTable, Filing, Attachment)
+        .join(ExtractedTable, ExtractedTable.id == ExtractedTableCell.table_id)
+        .join(Filing, Filing.id == ExtractedTable.filing_id)
+        .join(Attachment, Attachment.id == ExtractedTable.attachment_id)
+        .order_by(Filing.state, Filing.serff_tracking_number, ExtractedTableCell.id)
+    )
+    for cell, table, filing, attachment in session.execute(query):
+        rows.append(
+            {
+                "table_cell_id": cell.id,
+                "table_id": table.id,
+                "filing_id": filing.id,
+                "attachment_id": attachment.id,
+                "serff_tracking_number": filing.serff_tracking_number,
+                "state": filing.state,
+                "company_name": filing.company_name,
+                "filename": attachment.filename,
+                "page_number": table.page_number,
+                "table_kind": table.table_kind,
+                "row_index": cell.row_index,
+                "col_index": cell.col_index,
+                "row_label": cell.row_label,
+                "row_key": cell.row_key,
+                "col_label": cell.col_label,
+                "col_key": cell.col_key,
+                "cell_address": cell.cell_address,
+                "raw_value": cell.raw_value,
+                "normalized_value": cell.normalized_value,
+                "confidence": cell.confidence,
+                "needs_review": cell.needs_review,
             }
         )
     return rows

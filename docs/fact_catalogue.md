@@ -28,13 +28,34 @@ Every fact should carry these attributes, whether it lands in a narrow analytica
 | `normalized_value` | Typed/cleaned value for analysis. |
 | `unit` | Percent, dollars, count, factor, text, date, code, or composite. |
 | `coverage` | Coverage/peril when applicable, such as AL, APD, BI, PD, homeowners peril. |
+| `role` | Meaning of the value: indicated, selected, prior, requested, approved, filed, rounded, offset, final, or unknown. |
 | `scope` | Overall, coverage, territory, tier, class, factor level, policy, renewal, new business. |
 | `territory` | Territory code/name if applicable. |
 | `effective_date` | Date the value applies. |
 | `prior_filing_id` | Filing superseded by this fact when known. |
+| `snapshot_filing_id` | Filing snapshot this fact belongs to; facts are never overwritten to represent current state. |
+| `effective_start_date` | Start date for in-force reconstruction. |
+| `effective_end_date` | End date when known or derived from supersession. |
+| `supersedes_fact_id` | Prior fact this fact supersedes. |
+| `superseded_by_fact_id` | Later fact that supersedes this one. |
+| `supersession_status` | active, superseded, pending, withdrawn, or unknown. |
 | `confidence` | Extraction confidence. |
 | `needs_review` | True when confidence/context is insufficient for automated analytical use. |
 | `extraction_method` | Regex, table parser, filename inference, LLM review, manual review, etc. |
+
+Structured table facts should additionally carry:
+
+| Field | Purpose |
+| --- | --- |
+| `table_id` | Stable ID for a recognized source table. |
+| `table_name` | Human-readable table title/name when detected. |
+| `table_kind` | Inferred table purpose, such as LCM support, trend, expense, factor grid, or rate impact. |
+| `row_label` | Source row label. |
+| `row_key` | Normalized row identifier. |
+| `col_label` | Source column label. |
+| `col_key` | Normalized column identifier. |
+| `cell_address` | Spreadsheet/PDF-derived position when available. |
+| `table_locator_text` | Free-text fallback for messy table provenance. |
 
 ## Current MVP Extraction
 
@@ -104,4 +125,9 @@ These are useful but should not block the MVP:
 | `actuarial_assumption_fact` | Trend, LDF, credibility, on-level, catastrophe, reinsurance, experience period. |
 | `territory_definition` | Territory code definitions and remaps. |
 | `regulatory_interaction` | Objections, responses, topics, resolutions. |
+| `extracted_table` / `extracted_table_cell` | First-class table objects and cells used by table-derived facts. |
 | `extracted_fact` | Immutable evidence log and fallback for facts not yet normalized. |
+
+## Snapshot And Supersession Principle
+
+Filings and their facts are immutable snapshots. Loading a later filing must add new facts, not mutate prior rows into a current-state table. Current or in-force views should be derived by effective date, filing disposition, supersession links, and territory remap tables. This protects time series from silent corruption when a code such as `territory 5` is redefined in a later filing.

@@ -136,12 +136,68 @@ class ExtractedFact(Base):
     fact_type: Mapped[str] = mapped_column(String(128), index=True)
     fact_value: Mapped[str] = mapped_column(Text)
     normalized_value: Mapped[Optional[str]] = mapped_column(Text)
+    unit: Mapped[Optional[str]] = mapped_column(String(64))
+    coverage: Mapped[Optional[str]] = mapped_column(String(128), index=True)
+    role: Mapped[Optional[str]] = mapped_column(String(64), index=True)
+    scope: Mapped[Optional[str]] = mapped_column(String(128), index=True)
+    territory: Mapped[Optional[str]] = mapped_column(String(128), index=True)
     confidence: Mapped[float] = mapped_column(Float)
+    needs_review: Mapped[bool] = mapped_column(Boolean, default=False)
     evidence_text: Mapped[str] = mapped_column(Text)
     page_number: Mapped[Optional[int]] = mapped_column(Integer)
+    table_id: Mapped[Optional[int]] = mapped_column(ForeignKey("extracted_table.id"), index=True)
+    table_cell_id: Mapped[Optional[int]] = mapped_column(ForeignKey("extracted_table_cell.id"), index=True)
+    table_name: Mapped[Optional[str]] = mapped_column(Text)
+    table_kind: Mapped[Optional[str]] = mapped_column(String(128), index=True)
+    row_label: Mapped[Optional[str]] = mapped_column(Text)
+    row_key: Mapped[Optional[str]] = mapped_column(Text)
+    col_label: Mapped[Optional[str]] = mapped_column(Text)
+    col_key: Mapped[Optional[str]] = mapped_column(Text)
+    cell_address: Mapped[Optional[str]] = mapped_column(String(64))
+    table_locator_text: Mapped[Optional[str]] = mapped_column(Text)
+    effective_start_date: Mapped[Optional[datetime]] = mapped_column(Date)
+    effective_end_date: Mapped[Optional[datetime]] = mapped_column(Date)
+    snapshot_filing_id: Mapped[Optional[int]] = mapped_column(ForeignKey("filing.id"), index=True)
+    supersedes_fact_id: Mapped[Optional[int]] = mapped_column(ForeignKey("extracted_fact.id"))
+    superseded_by_fact_id: Mapped[Optional[int]] = mapped_column(ForeignKey("extracted_fact.id"))
+    supersession_status: Mapped[str] = mapped_column(String(64), default="active")
     bbox_json: Mapped[Optional[str]] = mapped_column(Text)
     extraction_method: Mapped[str] = mapped_column(String(128))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+
+
+class ExtractedTable(Base):
+    __tablename__ = "extracted_table"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    filing_id: Mapped[int] = mapped_column(ForeignKey("filing.id"), index=True)
+    attachment_id: Mapped[int] = mapped_column(ForeignKey("attachment.id"), index=True)
+    page_number: Mapped[int] = mapped_column(Integer)
+    table_index: Mapped[int] = mapped_column(Integer)
+    table_name: Mapped[Optional[str]] = mapped_column(Text)
+    table_kind: Mapped[str] = mapped_column(String(128), default="unknown")
+    confidence: Mapped[float] = mapped_column(Float, default=0.5)
+    needs_review: Mapped[bool] = mapped_column(Boolean, default=True)
+    locator_text: Mapped[Optional[str]] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+
+
+class ExtractedTableCell(Base):
+    __tablename__ = "extracted_table_cell"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    table_id: Mapped[int] = mapped_column(ForeignKey("extracted_table.id"), index=True)
+    row_index: Mapped[int] = mapped_column(Integer)
+    col_index: Mapped[int] = mapped_column(Integer)
+    row_label: Mapped[Optional[str]] = mapped_column(Text)
+    row_key: Mapped[Optional[str]] = mapped_column(Text)
+    col_label: Mapped[Optional[str]] = mapped_column(Text)
+    col_key: Mapped[Optional[str]] = mapped_column(Text)
+    cell_address: Mapped[Optional[str]] = mapped_column(String(64))
+    raw_value: Mapped[str] = mapped_column(Text)
+    normalized_value: Mapped[Optional[str]] = mapped_column(Text)
+    confidence: Mapped[float] = mapped_column(Float, default=0.5)
+    needs_review: Mapped[bool] = mapped_column(Boolean, default=True)
 
 
 class RegulatorObjection(Base):
