@@ -47,14 +47,14 @@ def extract_table_candidates(text_value: str) -> list[TableCandidate]:
 def _candidate_from_lines(table_index: int, lines: list[str]) -> TableCandidate:
     rows = [_split_row(line) for line in lines]
     kind = _infer_table_kind("\n".join(lines))
-    confidence = 0.55 if len(rows) < 4 else 0.65
+    confidence = _table_confidence(rows, kind)
     return TableCandidate(
         table_index=table_index,
         table_name=_infer_table_name(lines),
         table_kind=kind,
         rows=rows,
         confidence=confidence,
-        needs_review=True,
+        needs_review=confidence < 0.72,
         locator_text="\n".join(lines[:4]),
     )
 
@@ -76,6 +76,27 @@ def _split_row(line: str) -> list[str]:
     if len(parts) <= 1:
         parts = line.split()
     return parts
+
+
+def _table_confidence(rows: list[list[str]], kind: str) -> float:
+    if len(rows) < 2:
+        return 0.3
+    row_widths = [len(row) for row in rows if row]
+    if not row_widths:
+        return 0.3
+    target_width = max(set(row_widths), key=row_widths.count)
+    rectangular_ratio = sum(1 for width in row_widths if width == target_width) / len(row_widths)
+    numeric_cells = sum(1 for row in rows for cell in row if NUMERIC_RE.fullmatch(cell.replace(",", "")))
+    total_cells = sum(len(row) for row in rows)
+    numeric_ratio = numeric_cells / total_cells if total_cells else 0
+    has_header = bool(rows[0] and any(any(char.isalpha() for char in cell) for cell in rows[0]))
+    known_kind_bonus = 0.08 if kind != "unknown" else 0
+    score = 0.35 + 0.30 * rectangular_ratio + 0.20 * min(1.0, numeric_ratio * 2) + known_kind_bonus
+    if has_header:
+        score += 0.10
+    if target_width < 3:
+        score -= 0.15
+    return max(0.0, min(0.95, score))
 
 
 def _infer_table_name(lines: list[str]) -> str | None:

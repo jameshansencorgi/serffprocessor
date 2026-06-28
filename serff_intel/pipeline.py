@@ -249,7 +249,7 @@ def _persist_tables(session: Session, attachment: Attachment, page_number: int, 
                         raw_value=raw_value,
                         normalized_value=raw_value.replace(",", "").replace("$", "").replace("%", ""),
                         confidence=candidate.confidence,
-                        needs_review=True,
+                        needs_review=candidate.needs_review,
                     )
                 )
 

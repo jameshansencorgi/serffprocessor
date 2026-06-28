@@ -229,14 +229,26 @@ def test_rate_extractor_normalizes_roles_and_review_flags() -> None:
 
 def test_table_extraction_keeps_row_column_structure() -> None:
     tables = extract_table_candidates(
+        "Loss Cost Multiplier Support\n"
         "Coverage  Premium  Loss  Ratio\n"
         "AL        100000   65000 65%\n"
         "APD       80000    52000 65%\n"
     )
     assert len(tables) == 1
-    assert tables[0].needs_review is True
+    assert tables[0].needs_review is False
+    assert tables[0].confidence >= 0.72
     assert tables[0].rows[1][0] == "AL"
     assert tables[0].rows[1][1] == "100000"
+
+
+def test_low_confidence_table_extraction_stays_review_flagged() -> None:
+    tables = extract_table_candidates(
+        "Some  Header\n"
+        "AL    100000\n"
+        "APD   missing words 52000 65%\n"
+    )
+    assert len(tables) == 1
+    assert tables[0].needs_review is True
 
 
 def _comp_search_payload(attachment_path: Path) -> dict:
