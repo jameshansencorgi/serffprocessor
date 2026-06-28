@@ -11,6 +11,8 @@ from serff_intel.extract.schemas import EvidenceFact
 PERCENT_LABELS: list[tuple[str, str, re.Pattern[str]]] = [
     ("requested_rate_change", "requested", re.compile(r"(?:requested|proposed)\s+(?:rate\s+)?(?:level\s+)?(?:change|impact|increase|decrease)", re.I)),
     ("requested_rate_change", "requested", re.compile(r"overall\s+(?:rate\s+)?(?:level\s+)?(?:change|impact|increase|decrease)", re.I)),
+    # Exhibit C / PC365 statewide summary line ("3. Total Statewide Change 47.5%").
+    ("requested_rate_change", "filed", re.compile(r"total\s+statewide\s+change", re.I)),
     ("approved_rate_change", "approved", re.compile(r"approved\s+(?:rate\s+)?(?:level\s+)?(?:change|impact|increase|decrease)", re.I)),
     ("indicated_rate_level_change", "indicated", re.compile(r"indicated\s+(?:rate\s+)?(?:level\s+)?change", re.I)),
     ("selected_rate_level_change", "selected", re.compile(r"selected\s+(?:rate\s+)?(?:level\s+)?change", re.I)),
@@ -60,6 +62,26 @@ CREDIBILITY_RE = re.compile(r"credibility\s+(?:of|is|at|=|:)\s*\(?(-?\d+(?:\.\d+
 LCM_RE = re.compile(r"(?:indicated|selected|prior|rounded|offset|used\s+immediately\s+prior)?[^\n]{0,80}(?:loss\s+cost\s+multiplier|LCM)[^\n]{0,160}", re.I)
 DECIMAL_RE = re.compile(r"\d+\.\d{2,4}")
 
+# Coverage x LCM matrix (multi-line) that the single-line LCM_RE cannot reach, e.g.
+# exception pages:  "Coverage LCM\nLiability 2.002\nPhysical Damage 2.002".
+COVERAGE_LCM_HEADER_RE = re.compile(r"loss\s+cost\s+multiplier|coverage\s+lcm", re.I)
+COVERAGE_LCM_ROW_RE = re.compile(r"^\s*([A-Za-z][A-Za-z /&]{1,28}?)\s+(\d+\.\d{2,4})\s*$")
+SECTION_HEADING_RE = re.compile(r"^\s*\d+\.\s+[A-Z]")
+_COVERAGE_LABEL_MAP = {
+    "liability": "AL",
+    "auto liability": "AL",
+    "automobile liability": "AL",
+    "bodily injury": "BI",
+    "property damage": "PD",
+    "physical damage": "APD",
+    "auto physical damage": "APD",
+    "comprehensive": "COMP",
+    "collision": "COLL",
+    "combined": "COMBINED",
+    "al": "AL",
+    "apd": "APD",
+}
+
 
 def extract_rate_facts(text: str, page_number: int | None = None) -> list[EvidenceFact]:
     facts: list[EvidenceFact] = []
@@ -92,7 +114,52 @@ def extract_rate_facts(text: str, page_number: int | None = None) -> list[Eviden
             )
     facts.extend(_extract_written_premium_facts(text, page_number))
     facts.extend(_extract_credibility_facts(text, page_number))
+    facts.extend(_extract_coverage_lcm_facts(text, page_number))
     facts.extend(_extract_lcm_facts(text, page_number))
+    return facts
+
+
+def _extract_coverage_lcm_facts(text: str, page_number: int | None = None) -> list[EvidenceFact]:
+    """Recover LCMs from a Coverage x LCM matrix the single-line ``LCM_RE`` misses.
+
+    Only fires while inside an LCM section (after a "loss cost multiplier"/"coverage lcm"
+    header, until the next numbered manual heading), and only for known coverage labels
+    with a plausible factor value. Captures ``coverage`` as a bonus.
+    """
+    facts: list[EvidenceFact] = []
+    in_section = False
+    for line in text.splitlines():
+        if COVERAGE_LCM_HEADER_RE.search(line):
+            in_section = True
+            continue
+        if not in_section:
+            continue
+        if SECTION_HEADING_RE.match(line):
+            in_section = False
+            continue
+        match = COVERAGE_LCM_ROW_RE.match(line)
+        if not match:
+            continue
+        coverage = _COVERAGE_LABEL_MAP.get(match.group(1).strip().lower())
+        value = match.group(2)
+        if coverage is None or not (0.5 <= float(value) <= 10.0):
+            continue
+        facts.append(
+            EvidenceFact(
+                fact_type="loss_cost_multiplier",
+                fact_key=canonical_fact_key("loss_cost_multiplier"),
+                fact_value=value,
+                normalized_value=value,
+                unit="factor",
+                role="filed",
+                coverage=coverage,
+                confidence=0.8,
+                needs_review=False,
+                evidence_text=" ".join(line.split()),
+                page_number=page_number,
+                extraction_method="regex:rate_impact",
+            )
+        )
     return facts
 
 
@@ -129,12 +196,14 @@ def _select_percent_value(
         else:
             plausible.append((value, value_start))
         prev_end = token.end()
-    if len(plausible) == 1:
+    if plausible:
         value, value_start = plausible[0]
+        # Multiple candidates are only ambiguous if they disagree. A trend row that
+        # repeats the same value across year columns ("3.6% 3.6% 3.6%") is not ambiguous.
+        distinct = {float(candidate) for candidate, _ in plausible}
+        if len(distinct) > 1:
+            return value, value_start, "ambiguous_percent_candidates"
         return value, value_start, "distractor_number" if skipped_distractor else None
-    if len(plausible) > 1:
-        value, value_start = plausible[0]
-        return value, value_start, "ambiguous_percent_candidates"
     if fallback is not None:
         return fallback[0], fallback[1], "distractor_number"
     return None, None, None

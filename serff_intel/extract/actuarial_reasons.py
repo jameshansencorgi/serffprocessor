@@ -21,8 +21,8 @@ def extract_reason_facts(text: str, page_number: int | None = None) -> list[Evid
     facts: list[EvidenceFact] = []
     for fact_type, keywords in REASON_KEYWORDS.items():
         for keyword in keywords:
-            idx = lower.find(keyword)
-            if idx < 0:
+            idx = _first_prose_occurrence(text, lower, keyword)
+            if idx is None:
                 continue
             facts.append(
                 EvidenceFact(
@@ -41,4 +41,20 @@ def extract_reason_facts(text: str, page_number: int | None = None) -> list[Evid
 
 def _sentence_window(text: str, idx: int, radius: int = 240) -> str:
     return " ".join(text[max(0, idx - radius) : min(len(text), idx + radius)].split())
+
+
+def _first_prose_occurrence(text: str, lower: str, keyword: str) -> int | None:
+    """First index of ``keyword`` whose source text is not an all-caps heading token.
+
+    Narrative drivers should come from prose, not rating-manual section headings like
+    "24. TRUCKERS". Returns None when every occurrence is all-uppercase.
+    """
+    start = 0
+    while True:
+        idx = lower.find(keyword, start)
+        if idx < 0:
+            return None
+        if not text[idx : idx + len(keyword)].isupper():
+            return idx
+        start = idx + len(keyword)
 

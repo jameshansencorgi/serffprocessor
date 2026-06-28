@@ -1,0 +1,54 @@
+# Golden anchor facts for the real Accredited Surety / Brazos commercial-auto filing
+# (docs in data/processed/text). Values validated against source text.
+# The scorer compares numerically, so "25.7" matches an extracted "25.70".
+#
+# Each anchor: a high-value fact an actuary expects. `key` matches the extracted
+# fact's fact_key OR fact_type. `value` is the expected numeric value (percent/factor).
+# `table_borne: true` marks anchors that currently require table understanding
+# (tracked separately so prose recall isn't penalised by the known table gap).
+
+anchors:
+  attachment_1:
+    - {key: loss_cost_multiplier, value: 2.002, table_borne: true}   # Liability 2.002 / Physical Damage 2.002
+  attachment_4:
+    - {key: commission_expense_ratio, value: 25.7}
+    - {key: general_expense_ratio, value: 4.6}
+    - {key: taxes_licenses_fees_ratio, value: 2.6}
+  attachment_6:
+    - {key: profit_provision, value: 18.4}   # indicated underwriting profit provision
+    - {key: profit_provision, value: 9.0}    # selected
+  attachment_8:
+    - {key: loss_cost_multiplier, value: 2.002}   # indicated
+    - {key: loss_cost_multiplier, value: 1.901}   # offset/selected
+    - {key: profit_provision, value: 9.0}
+  attachment_10:
+    - {key: requested_rate_change, value: 47.5}   # Overall Rate Change 47.5%
+    - {key: loss_cost_multiplier, value: 2.002}
+    - {key: commission_expense_ratio, value: 25.7}
+    - {key: general_expense_ratio, value: 4.6}
+    - {key: taxes_licenses_fees_ratio, value: 2.6}
+    - {key: profit_provision, value: 9.0}
+    - {key: permissible_loss_ratio, value: 58.1}
+  attachment_14:
+    - {key: frequency_trend, value: 3.6}
+    - {key: severity_trend, value: 10.1}
+    - {key: indicated_rate_level_change, value: 116.2}
+    - {key: permissible_loss_ratio, value: 58.8}
+    - {key: expected_loss_ratio, value: 121.7}
+  attachment_15:
+    - {key: frequency_trend, value: 3.6}
+    - {key: severity_trend, value: 10.1}
+  attachment_18:
+    - {key: requested_rate_change, value: 47.5, table_borne: true}   # in a wide table row
+
+# Facts that must NOT be extracted (false-positive guards).
+must_not:
+  attachment_1:
+    - {key: trucking}            # "24. TRUCKERS" is a rating-class heading, not a narrative driver
+  attachment_24:
+    - {key: trucking}
+  attachment_10:
+    - {key: profit_provision, value: 41.9}   # "Total Expenses & Profit"
+  attachment_8:
+    - {key: profit_provision, value: 21.0}   # "Federal Income Tax on Underwriting Profit ... 21%"
+    - {key: profit_provision, value: 7.1}    # "Underwriting Profit After Federal Income Tax"
