@@ -1,0 +1,619 @@
+version: 0.1
+description: >
+  Canonical fact catalogue for SERFF actuarial extraction. Each fact can be
+  observed many times in extracted_fact, then promoted into normalized
+  relational tables once extraction is reliable.
+
+importance_scale:
+  critical: Required for actuarial analysis, filtering, time series, or rate impact.
+  high: Strongly useful for actuarial benchmarking and review.
+  medium: Useful context, QA, or compliance support.
+  low: Store/search for provenance; not a first-pass analytical feature.
+
+default_provenance_fields:
+  - filing_id
+  - attachment_id
+  - page_number
+  - table_locator
+  - evidence_text
+  - raw_value
+  - normalized_value
+  - unit
+  - coverage
+  - scope
+  - territory
+  - effective_date
+  - prior_filing_id
+  - confidence
+  - needs_review
+  - extraction_method
+
+fact_groups:
+  filing_metadata:
+    tier: 0
+    destination_table: filing
+    description: Filing spine metadata everything else hangs from.
+    facts:
+      serff_tracking_number:
+        label: SERFF tracking number
+        unit: code
+        datatype: string
+        importance: critical
+        current_status: normalized
+        required_dimensions: [state]
+      state_tracking_number:
+        label: State tracking number
+        unit: code
+        datatype: string
+        importance: high
+        current_status: missing
+        required_dimensions: [state]
+      company_name:
+        label: Company name
+        unit: text
+        datatype: string
+        importance: critical
+        current_status: normalized
+        required_dimensions: []
+      naic_company_code:
+        label: NAIC company code
+        unit: code
+        datatype: string
+        importance: critical
+        current_status: normalized
+        required_dimensions: []
+      state:
+        label: State
+        unit: code
+        datatype: string
+        importance: critical
+        current_status: normalized
+        required_dimensions: []
+      line_of_business:
+        label: Line of business / TOI
+        unit: text
+        datatype: string
+        importance: critical
+        current_status: normalized
+        required_dimensions: []
+      sub_line_or_product:
+        label: Sub-line, sub-TOI, or product
+        unit: text
+        datatype: string
+        importance: high
+        current_status: partial
+        required_dimensions: []
+      filing_type:
+        label: Filing type
+        unit: category
+        datatype: string
+        importance: critical
+        current_status: normalized
+        allowed_values: [rate, rule, form, rate_rule, rate_form, rule_form, rate_rule_form, informational]
+        required_dimensions: []
+      filing_method:
+        label: Filing method
+        unit: category
+        datatype: string
+        importance: medium
+        current_status: missing
+        examples: [prior_approval, file_and_use, use_and_file, informational]
+        required_dimensions: []
+      new_business_effective_date:
+        label: New business effective date
+        unit: date
+        datatype: date
+        importance: critical
+        current_status: missing
+        required_dimensions: []
+      renewal_effective_date:
+        label: Renewal effective date
+        unit: date
+        datatype: date
+        importance: critical
+        current_status: missing
+        required_dimensions: []
+      submitted_date:
+        label: Submission date
+        unit: date
+        datatype: date
+        importance: critical
+        current_status: normalized
+        required_dimensions: []
+      disposition_status:
+        label: Disposition status
+        unit: category
+        datatype: string
+        importance: critical
+        current_status: partial
+        examples: [approved, withdrawn, disapproved, filed_and_used, closed]
+        required_dimensions: []
+      disposition_date:
+        label: Disposition date
+        unit: date
+        datatype: date
+        importance: critical
+        current_status: normalized
+        required_dimensions: []
+      requested_approved_rate_gap:
+        label: Requested minus approved overall rate change
+        unit: percent_point
+        datatype: decimal
+        importance: critical
+        current_status: missing
+        derived_from: [requested_overall_rate_change, approved_overall_rate_change]
+        required_dimensions: []
+
+  rate_change_impact:
+    tier: 1
+    destination_table: rate_change_fact
+    description: Rate changes and policyholder impact at multiple granularities.
+    facts:
+      requested_overall_rate_change:
+        label: Requested overall rate change
+        unit: percent
+        datatype: decimal
+        importance: critical
+        current_status: partial
+        required_dimensions: [scope]
+      approved_overall_rate_change:
+        label: Approved overall rate change
+        unit: percent
+        datatype: decimal
+        importance: critical
+        current_status: partial
+        required_dimensions: [scope]
+      indicated_rate_change:
+        label: Indicated rate change
+        unit: percent
+        datatype: decimal
+        importance: critical
+        current_status: partial
+        required_dimensions: [scope, coverage]
+      selected_rate_change:
+        label: Selected rate change
+        unit: percent
+        datatype: decimal
+        importance: critical
+        current_status: partial
+        required_dimensions: [scope, coverage]
+      coverage_rate_change:
+        label: Rate change by coverage
+        unit: percent
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage]
+      territory_rate_change:
+        label: Rate change by territory
+        unit: percent
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [territory]
+      written_premium_impact:
+        label: Written premium impact
+        unit: dollars
+        datatype: decimal
+        importance: high
+        current_status: partial
+        required_dimensions: [scope]
+      policyholders_affected:
+        label: Number of policyholders affected
+        unit: count
+        datatype: integer
+        importance: high
+        current_status: missing
+        required_dimensions: [scope]
+      impact_band_count:
+        label: Number of policyholders in rate impact band
+        unit: count
+        datatype: integer
+        importance: high
+        current_status: missing
+        required_dimensions: [impact_band]
+      minimum_individual_impact:
+        label: Minimum individual policyholder impact
+        unit: percent
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [scope]
+      maximum_individual_impact:
+        label: Maximum individual policyholder impact
+        unit: percent
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [scope]
+
+  base_rates_loss_costs:
+    tier: 2
+    destination_table: loss_cost_or_base_rate_fact
+    description: Per-exposure rating foundation.
+    facts:
+      base_rate:
+        label: Base rate
+        unit: rate
+        datatype: decimal
+        importance: critical
+        current_status: missing
+        required_dimensions: [coverage, exposure_base]
+      loss_cost:
+        label: Loss cost
+        unit: rate
+        datatype: decimal
+        importance: critical
+        current_status: missing
+        required_dimensions: [coverage, exposure_base]
+      loss_cost_multiplier:
+        label: Loss cost multiplier
+        unit: factor
+        datatype: decimal
+        importance: critical
+        current_status: partial
+        required_dimensions: [coverage, role]
+        roles: [prior, indicated, selected, rounded, offset_for_risk_load]
+      exposure_base:
+        label: Exposure base / unit
+        unit: text
+        datatype: string
+        importance: high
+        current_status: missing
+        examples: [per_car_year, per_house_year, per_1000_coverage, per_100_payroll]
+        required_dimensions: [coverage]
+      amount_of_insurance_band:
+        label: Amount of insurance band
+        unit: band
+        datatype: string
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage]
+
+  rating_factors:
+    tier: 2
+    destination_table: rating_factor_fact
+    description: Rating variables, relativities, and factor tables.
+    facts:
+      rating_factor:
+        label: Rating factor / relativity
+        unit: factor
+        datatype: decimal
+        importance: critical
+        current_status: missing
+        required_dimensions: [rating_variable, factor_level]
+      rating_variable:
+        label: Rating variable
+        unit: controlled_vocabulary
+        datatype: string
+        importance: critical
+        current_status: missing
+        examples: [protection_class, territory, deductible, limit, vehicle_class, driver_age]
+        required_dimensions: []
+      factor_level:
+        label: Factor lookup value or band
+        unit: text
+        datatype: string
+        importance: critical
+        current_status: missing
+        required_dimensions: [rating_variable]
+      factor_type:
+        label: Factor type
+        unit: category
+        datatype: string
+        importance: high
+        current_status: missing
+        allowed_values: [multiplicative, additive, substitutional, credit, surcharge]
+        required_dimensions: [rating_variable]
+      algorithm_position:
+        label: Algorithm position
+        unit: ordinal
+        datatype: integer
+        importance: high
+        current_status: missing
+        required_dimensions: [rating_variable]
+
+  rating_algorithm:
+    tier: 2
+    destination_table: rating_algorithm_step
+    description: Ordered formula and validation examples.
+    facts:
+      formula_text:
+        label: Human-readable premium formula
+        unit: text
+        datatype: string
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage]
+      formula_step:
+        label: Structured rating algorithm step
+        unit: operation
+        datatype: object
+        importance: high
+        current_status: missing
+        required_dimensions: [step_index, operation]
+      worked_example:
+        label: Worked premium example
+        unit: composite
+        datatype: object
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage]
+
+  caps_floors_rounding:
+    tier: 2
+    destination_table: cap_floor_rounding_rule
+    description: Nonlinear rules that affect final premium.
+    facts:
+      renewal_cap:
+        label: Renewal rate cap
+        unit: percent
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [scope]
+      minimum_premium:
+        label: Minimum premium
+        unit: dollars
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage, scope]
+      maximum_premium:
+        label: Maximum premium
+        unit: dollars
+        datatype: decimal
+        importance: medium
+        current_status: missing
+        required_dimensions: [coverage, scope]
+      rounding_rule:
+        label: Rounding rule
+        unit: text
+        datatype: string
+        importance: high
+        current_status: missing
+        required_dimensions: [scope]
+
+  fees_expenses_profit:
+    tier: 1
+    destination_table: fee_expense_profit_fact
+    description: Fixed fees, expense provisions, profit, and loss ratio provisions.
+    facts:
+      policy_fee:
+        label: Policy fee
+        unit: dollars
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [scope]
+      installment_fee:
+        label: Installment fee
+        unit: dollars
+        datatype: decimal
+        importance: medium
+        current_status: missing
+        required_dimensions: [scope]
+      commission_expense_ratio:
+        label: Commission expense ratio
+        unit: percent
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage]
+      other_acquisition_expense_ratio:
+        label: Other acquisition expense ratio
+        unit: percent
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage]
+      general_expense_ratio:
+        label: General expense ratio
+        unit: percent
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage]
+      taxes_licenses_fees_ratio:
+        label: Taxes, licenses, and fees ratio
+        unit: percent
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage]
+      profit_provision:
+        label: Profit provision / profit load
+        unit: percent
+        datatype: decimal
+        importance: high
+        current_status: partial
+        required_dimensions: [coverage, role]
+        roles: [indicated, selected]
+      contingency_provision:
+        label: Contingency provision
+        unit: percent
+        datatype: decimal
+        importance: medium
+        current_status: missing
+        required_dimensions: [coverage]
+      permissible_loss_ratio:
+        label: Permissible loss and LAE ratio
+        unit: percent
+        datatype: decimal
+        importance: critical
+        current_status: missing
+        required_dimensions: [coverage]
+      expected_loss_ratio:
+        label: Expected loss ratio
+        unit: percent
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage]
+      risk_load:
+        label: Risk load
+        unit: percent
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage]
+
+  actuarial_support:
+    tier: 1
+    destination_table: actuarial_assumption_fact
+    description: Ratemaking assumptions and support for filed changes.
+    facts:
+      loss_development_factor:
+        label: Loss development factor
+        unit: factor
+        datatype: decimal
+        importance: critical
+        current_status: missing
+        required_dimensions: [coverage, maturity]
+      cumulative_loss_development_factor:
+        label: Cumulative loss development factor
+        unit: factor
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage, maturity]
+      frequency_trend:
+        label: Frequency trend
+        unit: percent
+        datatype: decimal
+        importance: critical
+        current_status: keyword_only
+        required_dimensions: [coverage, period]
+      severity_trend:
+        label: Severity trend
+        unit: percent
+        datatype: decimal
+        importance: critical
+        current_status: keyword_only
+        required_dimensions: [coverage, period]
+      loss_trend:
+        label: Loss trend
+        unit: percent
+        datatype: decimal
+        importance: critical
+        current_status: partial
+        required_dimensions: [coverage, period]
+      on_level_factor:
+        label: On-level factor
+        unit: factor
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage, experience_period]
+      credibility:
+        label: Credibility value
+        unit: percent
+        datatype: decimal
+        importance: high
+        current_status: keyword_only
+        required_dimensions: [coverage, basis]
+      experience_period:
+        label: Experience period
+        unit: date_range
+        datatype: object
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage]
+      catastrophe_load:
+        label: Catastrophe load / modeled cat provision
+        unit: percent
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage, peril]
+      reinsurance_cost_provision:
+        label: Reinsurance cost provision
+        unit: percent
+        datatype: decimal
+        importance: medium
+        current_status: missing
+        required_dimensions: [coverage]
+
+  territory_definitions:
+    tier: 2
+    destination_table: territory_definition
+    description: Territory definitions and changes over time.
+    facts:
+      territory_code:
+        label: Territory code
+        unit: code
+        datatype: string
+        importance: high
+        current_status: missing
+        required_dimensions: [state, line_of_business]
+      territory_definition:
+        label: Territory definition
+        unit: text
+        datatype: string
+        importance: high
+        current_status: missing
+        required_dimensions: [territory]
+      territory_zip_list:
+        label: Territory ZIP code list
+        unit: list
+        datatype: array
+        importance: high
+        current_status: missing
+        required_dimensions: [territory]
+      territory_remap:
+        label: Territory remapping from prior filing
+        unit: mapping
+        datatype: object
+        importance: high
+        current_status: missing
+        required_dimensions: [territory, prior_filing_id]
+
+  rules_context_regulatory:
+    tier: 4
+    destination_table: regulatory_interaction
+    description: Context, eligibility, underwriting, and regulator interaction.
+    facts:
+      eligibility_rule:
+        label: Eligibility or underwriting rule
+        unit: text
+        datatype: string
+        importance: medium
+        current_status: missing
+        required_dimensions: [rule_variable, consequence]
+      underwriting_consequence:
+        label: Underwriting consequence
+        unit: category
+        datatype: string
+        importance: medium
+        current_status: missing
+        allowed_values: [decline, surcharge, refer, tier_assignment, documentation_required]
+        required_dimensions: [rule_variable]
+      regulator_objection:
+        label: Regulator objection
+        unit: text
+        datatype: string
+        importance: medium
+        current_status: partial
+        required_dimensions: [topic]
+      company_response:
+        label: Company response to objection
+        unit: text
+        datatype: string
+        importance: medium
+        current_status: missing
+        required_dimensions: [topic]
+      iso_circular_reference:
+        label: ISO circular or loss cost reference
+        unit: code
+        datatype: string
+        importance: medium
+        current_status: missing
+        required_dimensions: [line_of_business]
+      narrative_driver_tag:
+        label: Narrative driver tag
+        unit: controlled_vocabulary
+        datatype: string
+        importance: low
+        current_status: partial
+        examples: [social_inflation, nuclear_verdicts, litigation, telematics, trucking, new_ventures]
+        required_dimensions: []
