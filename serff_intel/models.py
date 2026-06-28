@@ -99,6 +99,23 @@ class Attachment(Base):
     filing: Mapped[Filing] = relationship(back_populates="attachments")
 
 
+class AttachmentParseDecision(Base):
+    __tablename__ = "attachment_parse_decision"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    attachment_id: Mapped[int] = mapped_column(ForeignKey("attachment.id"), unique=True, index=True)
+    document_class: Mapped[str] = mapped_column(String(128), index=True)
+    extraction_route: Mapped[str] = mapped_column(String(128), index=True)
+    value_tier: Mapped[str] = mapped_column(String(128), index=True)
+    native_text_chars: Mapped[int] = mapped_column(Integer, default=0)
+    page_count: Mapped[int] = mapped_column(Integer, default=0)
+    table_like_score: Mapped[int] = mapped_column(Integer, default=0)
+    ocr_needed: Mapped[bool] = mapped_column(Boolean, default=False)
+    ocr_used: Mapped[bool] = mapped_column(Boolean, default=False)
+    route_reason: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+
+
 class DocumentPage(Base):
     __tablename__ = "document_page"
 

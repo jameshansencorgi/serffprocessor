@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from serff_intel import dtos
-from serff_intel.models import Attachment, ExtractedFact, Filing, FilingSegment, HarmonizedFiling
+from serff_intel.models import Attachment, AttachmentParseDecision, ExtractedFact, Filing, FilingSegment, HarmonizedFiling
 
 RATE_CHANGE_FACTS = {"requested_rate_change", "approved_rate_change", "indicated_rate_level_change", "selected_rate_level_change"}
 LCM_FACTS = {"loss_cost_multiplier"}
@@ -69,8 +69,13 @@ def _filing_rows(session: Session) -> list[dict[str, object]]:
 
 def _attachment_rows(session: Session) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
-    query = select(Attachment, Filing).join(Filing, Filing.id == Attachment.filing_id).order_by(Filing.state, Filing.serff_tracking_number, Attachment.filename)
-    for attachment, filing in session.execute(query):
+    query = (
+        select(Attachment, Filing, AttachmentParseDecision)
+        .join(Filing, Filing.id == Attachment.filing_id)
+        .join(AttachmentParseDecision, AttachmentParseDecision.attachment_id == Attachment.id, isouter=True)
+        .order_by(Filing.state, Filing.serff_tracking_number, Attachment.filename)
+    )
+    for attachment, filing, decision in session.execute(query):
         rows.append(
             {
                 "attachment_id": attachment.id,
@@ -83,6 +88,13 @@ def _attachment_rows(session: Session) -> list[dict[str, object]]:
                 "document_class": attachment.document_class,
                 "page_count": attachment.page_count,
                 "parse_status": attachment.parse_status,
+                "extraction_route": decision.extraction_route if decision else "",
+                "value_tier": decision.value_tier if decision else "",
+                "ocr_needed": decision.ocr_needed if decision else "",
+                "ocr_used": decision.ocr_used if decision else attachment.ocr_used,
+                "native_text_chars": decision.native_text_chars if decision else "",
+                "table_like_score": decision.table_like_score if decision else "",
+                "route_reason": decision.route_reason if decision else "",
                 "sha256": attachment.sha256,
                 "local_path": attachment.local_path,
             }
@@ -207,4 +219,3 @@ def _write_csv(path: Path, rows: list[dict[str, object]]) -> None:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
-

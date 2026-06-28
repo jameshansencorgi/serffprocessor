@@ -13,7 +13,17 @@ from serff_intel.extract.actuarial_reasons import extract_reason_facts
 from serff_intel.extract.entities import extract_metadata_from_text
 from serff_intel.extract.objections import extract_objection_facts
 from serff_intel.extract.rate_impact import extract_rate_facts
-from serff_intel.models import Attachment, DocumentPage, EmbeddingChunk, ExtractedFact, Filing, FilingSegment, RegulatorObjection
+from serff_intel.models import (
+    Attachment,
+    AttachmentParseDecision,
+    DocumentPage,
+    EmbeddingChunk,
+    ExtractedFact,
+    Filing,
+    FilingSegment,
+    RegulatorObjection,
+)
+from serff_intel.parsing.router import decide_parse_route
 from serff_intel.parsing.text_extract import parse_document
 
 
@@ -34,6 +44,7 @@ def process_pending(session: Session, settings: Settings) -> dtos.ProcessingResu
         session.execute(delete(ExtractedFact).where(ExtractedFact.attachment_id == attachment.id))
         session.execute(delete(EmbeddingChunk).where(EmbeddingChunk.attachment_id == attachment.id))
         session.execute(delete(FilingSegment).where(FilingSegment.attachment_id == attachment.id))
+        session.execute(delete(AttachmentParseDecision).where(AttachmentParseDecision.attachment_id == attachment.id))
         full_text_parts: list[str] = []
         for page in parsed.pages:
             full_text_parts.append(page.text)
@@ -53,6 +64,26 @@ def process_pending(session: Session, settings: Settings) -> dtos.ProcessingResu
         attachment.page_count = len(parsed.pages)
         attachment.ocr_used = any(page.ocr_used for page in parsed.pages)
         attachment.parse_status = "parsed" if parsed.pages and not parsed.failures else "failed"
+        decision = decide_parse_route(
+            file_type=attachment.file_type,
+            pages=parsed.pages,
+            document_class=classification.document_class,
+            failures=parsed.failures,
+        )
+        session.add(
+            AttachmentParseDecision(
+                attachment_id=attachment.id,
+                document_class=decision.document_class,
+                extraction_route=decision.extraction_route,
+                value_tier=decision.value_tier,
+                native_text_chars=decision.native_text_chars,
+                page_count=decision.page_count,
+                table_like_score=decision.table_like_score,
+                ocr_needed=decision.ocr_needed,
+                ocr_used=decision.ocr_used,
+                route_reason=decision.route_reason,
+            )
+        )
         text_path = settings.text_dir / f"attachment_{attachment.id}.txt"
         text_path.write_text(full_text)
         attachment.parsed_text_path = str(text_path)

@@ -90,6 +90,7 @@ Evidence and intelligence:
 - `filing_segment`
 - `embedding_chunk`
 - `coverage_snapshot`
+- `attachment_parse_decision`
 
 Harmonized release:
 
@@ -166,6 +167,11 @@ The MVP extracts:
 - regulator objection snippets
 
 Every extracted fact stores confidence, source attachment, page number where available, extraction method, and evidence text.
+
+The attachment decision tree is documented in
+[`docs/serff_document_decision_tree.md`](docs/serff_document_decision_tree.md).
+It records whether each filing document was routed as native text, table-aware
+native text, spreadsheet evidence, OCR-needed, or store-only context.
 
 ## S3 Method
 

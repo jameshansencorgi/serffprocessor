@@ -5,12 +5,15 @@ import json
 
 from sqlalchemy import select
 
+from serff_intel.classify.document_classifier import classify_document
 from serff_intel.config import load_settings
 from serff_intel.export import export_actuarial_tables, export_review_csv
 from serff_intel.ingest.comp_search import import_comp_search_run
 from serff_intel.ingest.manual_import import import_filing_folder
-from serff_intel.models import Attachment, ExtractedFact, Filing, HarmonizedFiling
+from serff_intel.models import Attachment, AttachmentParseDecision, ExtractedFact, Filing, HarmonizedFiling
 from serff_intel.pipeline import process_pending
+from serff_intel.parsing.router import decide_parse_route
+from serff_intel.parsing.text_extract import PageText
 from serff_intel.search.query import search
 from serff_intel.services import CorpusReleaseService
 from serff_intel.storage.db import init_db, make_engine, session_factory
@@ -85,6 +88,10 @@ def test_comp_search_import_and_exports(tmp_path: Path) -> None:
         assert session.scalar(select(Attachment)) is not None
         processed = process_pending(session, settings)
         assert processed.facts_created >= 3
+        decision = session.scalar(select(AttachmentParseDecision))
+        assert decision is not None
+        assert decision.extraction_route == "plain_text_or_unknown"
+        assert decision.value_tier == "high_value_actuarial"
         CorpusReleaseService.build_harmonized_release(session)
         actuarial_export = export_actuarial_tables(session, tmp_path / "exports")
         review_export = export_review_csv(session, tmp_path / "review" / "facts.csv")
@@ -93,6 +100,76 @@ def test_comp_search_import_and_exports(tmp_path: Path) -> None:
         assert review_export.rows_written > 0
         assert (tmp_path / "exports" / "rate_changes.csv").read_text().count("requested_rate_change") == 1
         assert "corrected_value" in (tmp_path / "review" / "facts.csv").read_text()
+        assert "extraction_route" in (tmp_path / "exports" / "attachments.csv").read_text()
+
+
+def test_serff_specific_document_classification() -> None:
+    examples = [
+        (
+            "TX Exhibit G (AL/APD).pdf",
+            "Loss Cost Multiplier calculation with variable expense and expected loss ratio.",
+            "lcm_exhibit",
+        ),
+        (
+            "Frequency and Severity Trend Selections as of 2025-06.pdf",
+            "Frequency trend and severity trend selections are shown below.",
+            "trend_exhibit",
+        ),
+        (
+            "Accredited Authorization Letter - TX.pdf",
+            "The company is authorized to file this rate/rule filing.",
+            "authorization_letter",
+        ),
+        (
+            "Brazos LDF Selections as of 2025-06.pdf",
+            "Selected loss development factor by age.",
+            "ldf_exhibit",
+        ),
+    ]
+    for filename, text, expected in examples:
+        assert classify_document(filename, text).document_class == expected
+
+
+def test_parse_decision_tree_flags_tables_ocr_and_store_only() -> None:
+    table_decision = decide_parse_route(
+        file_type="pdf",
+        pages=[
+            PageText(
+                1,
+                "\n".join(
+                    [
+                        "Loss Cost Multiplier support",
+                        "Coverage Premium Loss Ratio",
+                        "AL 100,000 65,000 65%",
+                        "APD 80,000 52,000 65%",
+                        "Total 180,000 117,000 65%",
+                    ]
+                ),
+            )
+        ],
+        document_class="lcm_exhibit",
+        failures=[],
+    )
+    assert table_decision.extraction_route == "native_text_table_aware"
+    assert table_decision.value_tier == "high_value_actuarial"
+
+    ocr_decision = decide_parse_route(
+        file_type="pdf",
+        pages=[PageText(1, "")],
+        document_class="rate_indication",
+        failures=["pdfplumber extracted no text"],
+    )
+    assert ocr_decision.extraction_route == "parse_failed"
+    assert ocr_decision.ocr_needed is True
+
+    store_decision = decide_parse_route(
+        file_type="pdf",
+        pages=[PageText(1, "Approval letter. The department has approved the filing." * 10)],
+        document_class="approval_letter",
+        failures=[],
+    )
+    assert store_decision.extraction_route == "native_text_store_only"
+    assert store_decision.value_tier == "store_only"
 
 
 def _comp_search_payload(attachment_path: Path) -> dict:
