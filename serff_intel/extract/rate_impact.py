@@ -50,6 +50,9 @@ PERCENT_LABELS: list[tuple[str, str, re.Pattern[str]]] = [
     ("profit_provision", "unknown", re.compile(r"(?<!&\s)(?<!\w\s)\bprofit\b(?!\s*(?:provision|load|margin))", re.I)),
     ("permissible_loss_ratio", "unknown", re.compile(r"permissible\s+loss\s+(?:&\s+lae\s+)?ratio(?!\s+in\s+decimal)", re.I)),
     ("expected_loss_ratio", "unknown", re.compile(r"expected\s+loss\s+ratio", re.I)),
+    # A-priori loss ratio (Cape Cod / BF) is an expected loss ratio: "Selected A-Priori 90.9%".
+    ("expected_loss_ratio", "selected", re.compile(r"selected\s+a-?priori", re.I)),
+    ("risk_load", "unknown", re.compile(r"risk\s+load", re.I)),
 ]
 
 WRITTEN_PREMIUM_RE = re.compile(r"written\s+premium\s+impact[^\n$0-9-]{0,80}(\$?-?\d[\d,]*(?:\.\d+)?)", re.I)

@@ -42,6 +42,7 @@ CANONICAL_FACT_KEY: dict[str, str] = {
     "taxes_licenses_fees_ratio": "taxes_licenses_fees_ratio",
     "permissible_loss_ratio": "permissible_loss_ratio",
     "expected_loss_ratio": "expected_loss_ratio",
+    "risk_load": "risk_load",
 }
 
 

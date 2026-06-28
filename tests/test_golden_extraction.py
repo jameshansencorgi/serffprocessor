@@ -61,6 +61,26 @@ def test_coverage_lcm_does_not_fire_outside_lcm_section() -> None:
     assert not coverage_lcms
 
 
+def test_selected_a_priori_maps_to_expected_loss_ratio() -> None:
+    facts = extract_rate_facts("Selected A-Priori 90.9%\n")
+    elr = [f for f in facts if f.fact_type == "expected_loss_ratio"]
+    assert elr and elr[0].normalized_value == "90.9"
+    assert elr[0].fact_key == "expected_loss_ratio"
+
+
+def test_risk_load_extracted() -> None:
+    facts = extract_rate_facts("(10) Risk Load 5.3%\n")
+    rl = [f for f in facts if f.fact_type == "risk_load"]
+    assert rl and rl[0].normalized_value == "5.3"
+    assert rl[0].fact_key == "risk_load"
+
+
+def test_risk_load_offset_phrase_without_percent_not_captured() -> None:
+    # "Offset for Risk Load (9)/[...] 1.901" has no adjacent %, so no risk_load fact.
+    facts = extract_rate_facts("Indicated LCM Offset for Risk Load (9)/[1.00+(10)] 1.901\n")
+    assert not [f for f in facts if f.fact_type == "risk_load"]
+
+
 def test_repeated_identical_percents_not_flagged_ambiguous() -> None:
     # A trend row repeats the same value across year columns -> not ambiguous.
     facts = extract_rate_facts("Frequency Trend 3.6% 3.6% 3.6% 3.6%\n")

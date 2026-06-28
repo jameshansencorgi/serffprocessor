@@ -29,12 +29,18 @@ anchors:
     - {key: taxes_licenses_fees_ratio, value: 2.6}
     - {key: profit_provision, value: 9.0}
     - {key: permissible_loss_ratio, value: 58.1}
+  attachment_8:
+    - {key: loss_cost_multiplier, value: 2.002}
+    - {key: loss_cost_multiplier, value: 1.901}
+    - {key: profit_provision, value: 9.0}
+    - {key: risk_load, value: 5.3}
   attachment_14:
     - {key: frequency_trend, value: 3.6}
     - {key: severity_trend, value: 10.1}
     - {key: indicated_rate_level_change, value: 116.2}
     - {key: permissible_loss_ratio, value: 58.8}
     - {key: expected_loss_ratio, value: 121.7}
+    - {key: expected_loss_ratio, value: 90.9}   # Selected A-Priori
   attachment_15:
     - {key: frequency_trend, value: 3.6}
     - {key: severity_trend, value: 10.1}
