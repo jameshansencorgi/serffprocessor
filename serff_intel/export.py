@@ -21,7 +21,15 @@ from serff_intel.models import (
 RATE_CHANGE_FACTS = {"requested_rate_change", "approved_rate_change", "indicated_rate_level_change", "selected_rate_level_change"}
 LCM_FACTS = {"loss_cost_multiplier"}
 PROVISION_FACTS = {"expense_provision", "profit_provision", "loss_trend"}
+WRITTEN_PREMIUM_FACTS = {"written_premium_impact"}
 OBJECTION_FACTS = {"regulator_objection"}
+
+
+def rate_gap(requested: float | None, approved: float | None) -> float | None:
+    """Requested-minus-approved overall rate change; ``None`` unless both are present."""
+    if requested is None or approved is None:
+        return None
+    return round(requested - approved, 4)
 
 
 def export_actuarial_tables(session: Session, out_dir: Path) -> dtos.ExportResult:
@@ -32,6 +40,7 @@ def export_actuarial_tables(session: Session, out_dir: Path) -> dtos.ExportResul
         "rate_changes.csv": _fact_rows(session, RATE_CHANGE_FACTS),
         "loss_cost_multipliers.csv": _fact_rows(session, LCM_FACTS),
         "provisions.csv": _fact_rows(session, PROVISION_FACTS),
+        "written_premium_impacts.csv": _fact_rows(session, WRITTEN_PREMIUM_FACTS),
         "objections.csv": _fact_rows(session, OBJECTION_FACTS),
         "segments.csv": _segment_rows(session),
         "extracted_tables.csv": _table_rows(session),
@@ -47,9 +56,15 @@ def export_actuarial_tables(session: Session, out_dir: Path) -> dtos.ExportResul
     return dtos.ExportResult(files_written=files_written, rows_written=rows_written)
 
 
-def export_review_csv(session: Session, output_path: Path, limit: int | None = None) -> dtos.ExportResult:
+def export_review_csv(
+    session: Session,
+    output_path: Path,
+    limit: int | None = None,
+    *,
+    include_all: bool = False,
+) -> dtos.ExportResult:
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    rows = _review_rows(session, limit)
+    rows = _review_rows(session, limit, include_all=include_all)
     _write_csv(output_path, rows)
     return dtos.ExportResult(files_written=1, rows_written=len(rows))
 
@@ -73,6 +88,7 @@ def _filing_rows(session: Session) -> list[dict[str, object]]:
                 "effective_date": filing.effective_date,
                 "rate_impact_requested": filing.rate_impact_requested,
                 "rate_impact_approved": filing.rate_impact_approved,
+                "requested_approved_rate_gap": rate_gap(filing.rate_impact_requested, filing.rate_impact_approved),
             }
         )
     return rows
@@ -127,14 +143,22 @@ def _fact_rows(session: Session, fact_types: set[str]) -> list[dict[str, object]
     return rows
 
 
-def _review_rows(session: Session, limit: int | None) -> list[dict[str, object]]:
+def _review_rows(session: Session, limit: int | None, *, include_all: bool) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     query = (
         select(ExtractedFact, Filing, Attachment)
         .join(Filing, Filing.id == ExtractedFact.filing_id)
         .join(Attachment, Attachment.id == ExtractedFact.attachment_id, isouter=True)
-        .order_by(ExtractedFact.confidence, Filing.state, Filing.serff_tracking_number, ExtractedFact.id)
+        .order_by(
+            ExtractedFact.needs_review.desc(),
+            ExtractedFact.confidence,
+            Filing.state,
+            Filing.serff_tracking_number,
+            ExtractedFact.id,
+        )
     )
+    if not include_all:
+        query = query.where(ExtractedFact.needs_review.is_(True))
     if limit:
         query = query.limit(limit)
     for fact, filing, attachment in session.execute(query):
@@ -156,6 +180,7 @@ def _fact_row(fact: ExtractedFact, filing: Filing, attachment: Attachment | None
         "filename": attachment.filename if attachment else "",
         "document_class": attachment.document_class if attachment else "",
         "fact_type": fact.fact_type,
+        "fact_key": fact.fact_key,
         "fact_value": fact.fact_value,
         "normalized_value": fact.normalized_value,
         "unit": fact.unit,
@@ -165,6 +190,7 @@ def _fact_row(fact: ExtractedFact, filing: Filing, attachment: Attachment | None
         "territory": fact.territory,
         "confidence": fact.confidence,
         "needs_review": fact.needs_review,
+        "review_reason": fact.review_reason,
         "page_number": fact.page_number,
         "table_id": fact.table_id,
         "table_cell_id": fact.table_cell_id,

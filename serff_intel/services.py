@@ -38,8 +38,27 @@ class FilingImportService:
 
 class FilingProcessingService:
     @staticmethod
-    def process_pending(session: Session, settings: Settings) -> dtos.ProcessingResult:
-        return process_pending(session, settings)
+    def process_pending(
+        session: Session,
+        settings: Settings,
+        *,
+        limit: int | None = None,
+        serff: str | None = None,
+        dry_run: bool = False,
+        fail_fast: bool = False,
+        retry_failed: bool = False,
+        max_retries: int = 3,
+    ) -> dtos.ProcessingResult:
+        return process_pending(
+            session,
+            settings,
+            limit=limit,
+            serff=serff,
+            dry_run=dry_run,
+            fail_fast=fail_fast,
+            retry_failed=retry_failed,
+            max_retries=max_retries,
+        )
 
     @staticmethod
     def rebuild_search_index(session: Session) -> int:
@@ -138,8 +157,14 @@ class FilingExportService:
         return export_actuarial_tables(session, out_dir)
 
     @staticmethod
-    def export_review(session: Session, output_path: Path, limit: int | None = None) -> dtos.ExportResult:
-        return export_review_csv(session, output_path, limit)
+    def export_review(
+        session: Session,
+        output_path: Path,
+        limit: int | None = None,
+        *,
+        include_all: bool = False,
+    ) -> dtos.ExportResult:
+        return export_review_csv(session, output_path, limit, include_all=include_all)
 
 
 class FilingSummaryService:

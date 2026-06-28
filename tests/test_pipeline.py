@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import json
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 import yaml
 
 from serff_intel.classify.document_classifier import classify_document
@@ -13,7 +13,16 @@ from serff_intel.extract.rate_impact import extract_rate_facts
 from serff_intel.extract.tables import extract_table_candidates
 from serff_intel.ingest.comp_search import import_comp_search_run
 from serff_intel.ingest.manual_import import import_filing_folder
-from serff_intel.models import Attachment, AttachmentParseDecision, ExtractedFact, ExtractedTable, Filing, HarmonizedFiling
+from serff_intel.models import (
+    Attachment,
+    AttachmentParseDecision,
+    DocumentPage,
+    ExtractedFact,
+    ExtractedTable,
+    Filing,
+    HarmonizedFiling,
+    ProcessingError,
+)
 from serff_intel.pipeline import process_pending
 from serff_intel.parsing.router import decide_parse_route
 from serff_intel.parsing.text_extract import PageText
@@ -96,6 +105,22 @@ def test_comp_search_import_and_exports(tmp_path: Path) -> None:
         assert session.scalar(select(Attachment)) is not None
         processed = process_pending(session, settings)
         assert processed.facts_created >= 3
+        high_value_facts = session.scalars(
+            select(ExtractedFact).where(
+                ExtractedFact.fact_type.in_(
+                    {
+                        "requested_rate_change",
+                        "approved_rate_change",
+                        "indicated_rate_level_change",
+                        "selected_rate_level_change",
+                        "loss_cost_multiplier",
+                        "profit_provision",
+                    }
+                )
+            )
+        ).all()
+        assert high_value_facts
+        assert all(fact.fact_key and fact.fact_key != "unknown" for fact in high_value_facts)
         assert session.scalar(select(ExtractedTable)) is not None
         decision = session.scalar(select(AttachmentParseDecision))
         assert decision is not None
@@ -104,15 +129,156 @@ def test_comp_search_import_and_exports(tmp_path: Path) -> None:
         CorpusReleaseService.build_harmonized_release(session)
         actuarial_export = export_actuarial_tables(session, tmp_path / "exports")
         review_export = export_review_csv(session, tmp_path / "review" / "facts.csv")
-        assert actuarial_export.files_written == 10
+        assert actuarial_export.files_written == 11
         assert actuarial_export.rows_written > 0
         assert review_export.rows_written > 0
         assert (tmp_path / "exports" / "rate_changes.csv").read_text().count("requested_rate_change") == 1
+        assert "requested_overall_rate_change" in (tmp_path / "exports" / "rate_changes.csv").read_text()
         assert "corrected_value" in (tmp_path / "review" / "facts.csv").read_text()
+        assert "review_reason" in (tmp_path / "review" / "facts.csv").read_text()
         assert "extraction_route" in (tmp_path / "exports" / "attachments.csv").read_text()
         assert "role" in (tmp_path / "exports" / "loss_cost_multipliers.csv").read_text()
         assert (tmp_path / "exports" / "extracted_tables.csv").exists()
         assert (tmp_path / "exports" / "extracted_table_cells.csv").exists()
+
+
+def test_process_pending_limit_dry_run_and_serff_filter(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    settings = load_settings(root)
+    settings = settings.__class__(
+        root_dir=root,
+        db_url=f"sqlite:///{tmp_path / 'serff.sqlite'}",
+        raw_dir=settings.raw_dir,
+        processed_dir=tmp_path / "processed",
+    )
+    engine = make_engine(settings)
+    init_db(engine)
+    Session = session_factory(engine)
+
+    with Session() as session:
+        import_filing_folder(session, root / "data/raw/filings/TX/ACME-133700001")
+
+        dry_run = process_pending(session, settings, limit=1, dry_run=True)
+        assert dry_run.attachments_processed == 1
+        assert session.scalar(select(func.count(DocumentPage.id))) == 0
+        assert session.scalar(select(func.count(ExtractedFact.id))) == 0
+
+        processed = process_pending(session, settings, limit=1)
+        assert processed.attachments_processed == 1
+        assert session.scalar(select(func.count(Attachment.id)).where(Attachment.parse_status == "parsed")) == 1
+
+        skipped = process_pending(session, settings, serff="NOPE-000000000")
+        assert skipped.attachments_processed == 0
+        assert session.scalar(select(func.count(Attachment.id)).where(Attachment.parse_status == "parsed")) == 1
+
+
+def test_process_pending_records_processing_error_and_continues(tmp_path: Path, monkeypatch) -> None:
+    import serff_intel.pipeline as pipeline_module
+
+    root = Path(__file__).resolve().parents[1]
+    settings = load_settings(root)
+    settings = settings.__class__(
+        root_dir=root,
+        db_url=f"sqlite:///{tmp_path / 'serff.sqlite'}",
+        raw_dir=settings.raw_dir,
+        processed_dir=tmp_path / "processed",
+    )
+    engine = make_engine(settings)
+    init_db(engine)
+    Session = session_factory(engine)
+    original_parse_document = pipeline_module.parse_document
+    calls = 0
+
+    def flaky_parse_document(path: Path):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise RuntimeError("parser boom")
+        return original_parse_document(path)
+
+    monkeypatch.setattr(pipeline_module, "parse_document", flaky_parse_document)
+
+    with Session() as session:
+        import_filing_folder(session, root / "data/raw/filings/TX/ACME-133700001")
+        result = pipeline_module.process_pending(session, settings)
+        assert result.attachments_processed == 2
+        error = session.scalar(select(ProcessingError))
+        assert error is not None
+        assert error.stage == "parse"
+        assert error.exception_type == "RuntimeError"
+        assert "parser boom" in error.message
+        assert session.scalar(select(func.count(Attachment.id)).where(Attachment.parse_status == "parsed")) == 1
+
+
+def test_process_pending_preserves_committed_stages_when_chunking_fails(tmp_path: Path, monkeypatch) -> None:
+    import serff_intel.pipeline as pipeline_module
+
+    root = Path(__file__).resolve().parents[1]
+    settings = load_settings(root)
+    settings = settings.__class__(
+        root_dir=root,
+        db_url=f"sqlite:///{tmp_path / 'serff.sqlite'}",
+        raw_dir=settings.raw_dir,
+        processed_dir=tmp_path / "processed",
+    )
+    engine = make_engine(settings)
+    init_db(engine)
+    Session = session_factory(engine)
+
+    def failing_classify_segment(text: str):
+        raise RuntimeError("chunk boom")
+
+    monkeypatch.setattr(pipeline_module, "classify_segment", failing_classify_segment)
+
+    with Session() as session:
+        import_filing_folder(session, root / "data/raw/filings/TX/ACME-133700001")
+        result = pipeline_module.process_pending(session, settings)
+        assert result.attachments_processed == 2
+        assert result.pages_created > 0
+        assert result.facts_created > 0
+        assert result.segments_created == 0
+        assert session.scalar(select(func.count(DocumentPage.id))) == result.pages_created
+        assert session.scalar(select(func.count(ExtractedFact.id))) == result.facts_created
+        assert session.scalar(select(func.count(ProcessingError.id)).where(ProcessingError.stage == "chunk")) == 2
+
+
+def test_process_pending_retry_failed_is_explicit_and_terminal(tmp_path: Path, monkeypatch) -> None:
+    import serff_intel.pipeline as pipeline_module
+
+    root = Path(__file__).resolve().parents[1]
+    settings = load_settings(root)
+    settings = settings.__class__(
+        root_dir=root,
+        db_url=f"sqlite:///{tmp_path / 'serff.sqlite'}",
+        raw_dir=settings.raw_dir,
+        processed_dir=tmp_path / "processed",
+    )
+    engine = make_engine(settings)
+    init_db(engine)
+    Session = session_factory(engine)
+
+    def failing_parse_document(path: Path):
+        raise RuntimeError("permanent parse boom")
+
+    monkeypatch.setattr(pipeline_module, "parse_document", failing_parse_document)
+
+    with Session() as session:
+        import_filing_folder(session, root / "data/raw/filings/TX/ACME-133700001")
+
+        first = pipeline_module.process_pending(session, settings, max_retries=2)
+        assert first.attachments_processed == 2
+        assert session.scalar(select(func.count(Attachment.id)).where(Attachment.parse_status == "failed")) == 2
+        assert session.scalar(select(func.count(Attachment.id)).where(Attachment.retry_count == 1)) == 2
+
+        default_skip = pipeline_module.process_pending(session, settings, max_retries=2)
+        assert default_skip.attachments_processed == 0
+
+        retry = pipeline_module.process_pending(session, settings, retry_failed=True, max_retries=2)
+        assert retry.attachments_processed == 2
+        assert session.scalar(select(func.count(Attachment.id)).where(Attachment.terminal_failed.is_(True))) == 2
+
+        terminal_skip = pipeline_module.process_pending(session, settings, retry_failed=True, max_retries=2)
+        assert terminal_skip.attachments_processed == 0
 
 
 def test_serff_specific_document_classification() -> None:

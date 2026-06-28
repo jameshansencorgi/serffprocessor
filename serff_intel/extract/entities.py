@@ -22,3 +22,36 @@ def extract_metadata_from_text(text: str) -> dict[str, str]:
 def _clean_line(value: str) -> str:
     return value.splitlines()[0].strip(" .:-")
 
+
+# Negative/specific dispositions are listed first so substring matching cannot
+# resolve "disapproved ..." to "approved".
+_DISPOSITION_MAP: dict[str, str] = {
+    "disapproved": "disapproved",
+    "denied": "disapproved",
+    "rejected": "disapproved",
+    "approved": "approved",
+    "approval": "approved",
+    "filed and used": "filed_and_used",
+    "filed & used": "filed_and_used",
+    "file and use": "filed_and_used",
+    "use and file": "filed_and_used",
+    "withdrawn": "withdrawn",
+    "withdraw": "withdrawn",
+    "closed": "closed",
+    "pending": "pending",
+    "under review": "pending",
+}
+
+
+def normalize_disposition(raw: str | None) -> str | None:
+    """Map a raw filing status string to the controlled disposition vocabulary, or ``None``."""
+    if not raw:
+        return None
+    key = re.sub(r"\s+", " ", raw.strip().lower())
+    if key in _DISPOSITION_MAP:
+        return _DISPOSITION_MAP[key]
+    for needle, value in _DISPOSITION_MAP.items():
+        if needle in key:
+            return value
+    return None
+

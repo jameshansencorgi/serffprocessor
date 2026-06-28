@@ -3,8 +3,10 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from sqlalchemy import func, select
+
 from serff_intel.config import load_settings
-from serff_intel.models import Attachment, Filing
+from serff_intel.models import Attachment, Filing, ProcessingError
 from serff_intel.services import (
     CorpusReleaseService,
     FilingExportService,
@@ -36,7 +38,13 @@ def main(argv: list[str] | None = None) -> None:
     comp_parser = sub.add_parser("import-comp-search-run")
     comp_parser.add_argument("results_json")
 
-    sub.add_parser("process-pending")
+    process_parser = sub.add_parser("process-pending")
+    process_parser.add_argument("--limit", type=int)
+    process_parser.add_argument("--serff")
+    process_parser.add_argument("--dry-run", action="store_true")
+    process_parser.add_argument("--fail-fast", action="store_true")
+    process_parser.add_argument("--retry-failed", action="store_true")
+    process_parser.add_argument("--max-retries", type=int, default=3)
     sub.add_parser("build-index")
 
     release_parser = sub.add_parser("build-release")
@@ -57,8 +65,10 @@ def main(argv: list[str] | None = None) -> None:
     review_parser = sub.add_parser("export-review")
     review_parser.add_argument("output_csv")
     review_parser.add_argument("--limit", type=int)
+    review_parser.add_argument("--all", action="store_true", help="Include facts that are not marked needs_review.")
 
-    sub.add_parser("summary")
+    summary_parser = sub.add_parser("summary")
+    summary_parser.add_argument("--errors", action="store_true", help="Show recent processing errors grouped by stage.")
 
     args = parser.parse_args(argv)
     settings = load_settings(args.root)
@@ -88,9 +98,19 @@ def main(argv: list[str] | None = None) -> None:
                 f"{result.filing_bundles_created} new filing bundles, {result.attachments_created} new attachments"
             )
         elif args.command == "process-pending":
-            result = FilingProcessingService.process_pending(session, settings)
+            result = FilingProcessingService.process_pending(
+                session,
+                settings,
+                limit=args.limit,
+                serff=args.serff,
+                dry_run=args.dry_run,
+                fail_fast=args.fail_fast,
+                retry_failed=args.retry_failed,
+                max_retries=args.max_retries,
+            )
+            verb = "Would process" if args.dry_run else "Processed"
             print(
-                "Processed "
+                f"{verb} "
                 f"{result.attachments_processed} attachments, {result.pages_created} pages, "
                 f"{result.segments_created} segments, "
                 f"{result.facts_created} facts, {result.chunks_created} chunks"
@@ -126,7 +146,12 @@ def main(argv: list[str] | None = None) -> None:
             result = FilingExportService.export_actuarial(session, Path(args.out_dir))
             print(f"Exported {result.rows_written} rows across {result.files_written} actuarial CSV files")
         elif args.command == "export-review":
-            result = FilingExportService.export_review(session, Path(args.output_csv), limit=args.limit)
+            result = FilingExportService.export_review(
+                session,
+                Path(args.output_csv),
+                limit=args.limit,
+                include_all=args.all,
+            )
             print(f"Exported {result.rows_written} review rows to {args.output_csv}")
         elif args.command == "summary":
             result = FilingSummaryService.get_summary(session)
@@ -134,6 +159,22 @@ def main(argv: list[str] | None = None) -> None:
             print(f"Attachments: {result.attachments}")
             print(f"Segments: {result.segments}")
             print(f"Extracted facts: {result.extracted_facts}")
+            if args.errors:
+                rows = session.execute(
+                    select(
+                        ProcessingError.stage,
+                        ProcessingError.exception_type,
+                        func.count(ProcessingError.id),
+                    )
+                    .group_by(ProcessingError.stage, ProcessingError.exception_type)
+                    .order_by(ProcessingError.stage, ProcessingError.exception_type)
+                ).all()
+                if rows:
+                    print("Processing errors:")
+                    for stage, exception_type, count in rows:
+                        print(f"- {stage} | {exception_type}: {count}")
+                else:
+                    print("Processing errors: none")
 
 
 if __name__ == "__main__":

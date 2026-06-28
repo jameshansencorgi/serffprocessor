@@ -4,7 +4,9 @@ from datetime import UTC, datetime
 from typing import Optional
 
 from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, validates
+
+from serff_intel.extract.fact_keys import canonical_fact_key
 
 
 def utc_now() -> datetime:
@@ -94,6 +96,10 @@ class Attachment(Base):
     ocr_used: Mapped[bool] = mapped_column(Boolean, default=False)
     parsed_text_path: Mapped[Optional[str]] = mapped_column(Text)
     parse_status: Mapped[str] = mapped_column(String(64), default="pending")
+    retry_count: Mapped[int] = mapped_column(Integer, default=0)
+    last_error_stage: Mapped[Optional[str]] = mapped_column(String(128), index=True)
+    last_error_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    terminal_failed: Mapped[bool] = mapped_column(Boolean, default=False)
     raw_metadata_json: Mapped[Optional[str]] = mapped_column(Text)
 
     filing: Mapped[Filing] = relationship(back_populates="attachments")
@@ -134,6 +140,7 @@ class ExtractedFact(Base):
     filing_id: Mapped[int] = mapped_column(ForeignKey("filing.id"), index=True)
     attachment_id: Mapped[Optional[int]] = mapped_column(ForeignKey("attachment.id"), index=True)
     fact_type: Mapped[str] = mapped_column(String(128), index=True)
+    fact_key: Mapped[str] = mapped_column(String(128), default="unknown", index=True)
     fact_value: Mapped[str] = mapped_column(Text)
     normalized_value: Mapped[Optional[str]] = mapped_column(Text)
     unit: Mapped[Optional[str]] = mapped_column(String(64))
@@ -143,6 +150,7 @@ class ExtractedFact(Base):
     territory: Mapped[Optional[str]] = mapped_column(String(128), index=True)
     confidence: Mapped[float] = mapped_column(Float)
     needs_review: Mapped[bool] = mapped_column(Boolean, default=False)
+    review_reason: Mapped[Optional[str]] = mapped_column(String(128), index=True)
     evidence_text: Mapped[str] = mapped_column(Text)
     page_number: Mapped[Optional[int]] = mapped_column(Integer)
     table_id: Mapped[Optional[int]] = mapped_column(ForeignKey("extracted_table.id"), index=True)
@@ -164,6 +172,12 @@ class ExtractedFact(Base):
     bbox_json: Mapped[Optional[str]] = mapped_column(Text)
     extraction_method: Mapped[str] = mapped_column(String(128))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+
+    @validates("fact_type")
+    def _populate_fact_key(self, key: str, value: str) -> str:
+        if not self.fact_key or self.fact_key == "unknown":
+            self.fact_key = canonical_fact_key(value) or "unknown"
+        return value
 
 
 class ExtractedTable(Base):
@@ -289,4 +303,19 @@ class CoverageSnapshot(Base):
     attachments_processed: Mapped[int] = mapped_column(Integer, default=0)
     ocr_failure_count: Mapped[int] = mapped_column(Integer, default=0)
     parse_failure_count: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+
+
+class ProcessingError(Base):
+    __tablename__ = "processing_error"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    run_id: Mapped[str] = mapped_column(String(64), index=True)
+    filing_id: Mapped[Optional[int]] = mapped_column(ForeignKey("filing.id"), index=True)
+    attachment_id: Mapped[Optional[int]] = mapped_column(ForeignKey("attachment.id"), index=True)
+    stage: Mapped[str] = mapped_column(String(128), index=True)
+    exception_type: Mapped[str] = mapped_column(String(255))
+    message: Mapped[str] = mapped_column(Text)
+    traceback_hash: Mapped[str] = mapped_column(String(64), index=True)
+    retryable: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)

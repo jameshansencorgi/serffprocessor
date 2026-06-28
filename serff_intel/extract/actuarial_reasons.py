@@ -3,17 +3,16 @@ from __future__ import annotations
 from serff_intel.extract.schemas import EvidenceFact
 
 
+# Qualitative narrative drivers only. Quantitative cues (frequency/severity trend,
+# credibility, loss trend) are now numeric extractors in rate_impact.py, so they no
+# longer enter the review queue as keyword-as-value "unknown" facts.
 REASON_KEYWORDS: dict[str, tuple[str, ...]] = {
     "social_inflation": ("social inflation",),
     "nuclear_verdicts": ("nuclear verdict", "large verdict", "runaway verdict"),
     "litigation": ("litigation", "attorney representation", "lawsuit"),
-    "frequency": ("claim frequency", "frequency"),
-    "severity": ("claim severity", "severity"),
     "telematics": ("telematics", "usage based", "usage-based"),
     "new_ventures": ("new venture", "new ventures"),
-    "trucking": ("trucking", "truckers", "motor carrier", "commercial auto"),
-    "loss_trend_reason": ("loss trend", "trend selection"),
-    "credibility_method": ("credibility", "complement of credibility"),
+    "trucking": ("trucking", "truckers", "motor carrier"),
 }
 
 

@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 class EvidenceFact(BaseModel):
     fact_type: str
+    fact_key: str | None = None
     fact_value: str
     normalized_value: str | None = None
     unit: str | None = None
@@ -14,6 +15,7 @@ class EvidenceFact(BaseModel):
     territory: str | None = None
     confidence: float = Field(ge=0, le=1)
     needs_review: bool = False
+    review_reason: str | None = None
     evidence_text: str
     page_number: int | None = None
     table_id: int | None = None
