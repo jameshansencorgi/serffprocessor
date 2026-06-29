@@ -1,0 +1,32 @@
+Exhibit G – Loss Cost Information for Reference Filings
+Company name: Accredited Surety and Casualty Company, Inc.
+Company NAIC number: 26379
+Line: 19.4
+Coverage/form: Commercial Auto Liability
+1. Loss Costs Being Referenced
+Advisory Organization: Insurance Services Office, Inc
+Description: Commercial Auto Liability
+TDI file number: S712988
+Advisory organization reference number: CA-2023-BRLA1
+2. Loss Cost Modification Factor (0% modification = 1.00)
+Justification based on company’s own experience must be provided. 1.163
+3. Expense and Profit Provisions Used in this Filing (see Lines 15-22 of Exhibit E or Exhibit F)
+a) Commission & Brokerage Expenses 25.7%
+b) Other Acquisition Expenses 0.0%
+c) General Expenses 4.6%
+d) Taxes, Licenses & Fees 2.6%
+e) Premium Discount/Expense Constant 0.0%
+f) Profit 9.0%
+g) Total Expenses & Profit 41.9%
+h) Permissible Loss & LAE Ratio 58.1%
+i) Permissible Loss & LAE Ratio in Decimal Form 0.581
+4. Loss Cost Multiplier (Line 2 ÷ Line 3i) 2.002
+5. Loss Cost Multiplier, rounded if necessary * 2.002
+6. Loss Cost Multiplier Used Immediately Prior to the Effective Date of this Filing 2.002
+7. Percentage Change Resulting From Revised Loss Cost Multiplier 0.0%
+8. Loss Cost Level Change 0.0%
+9. Percentage Change Resulting from Other Updates 0.0%
+10. Overall Rate Change 47.5%
+* Line 5 must equal Line 4, except for differences due to rounding.
+Attach additional Exhibit G pages as needed.
+1/1

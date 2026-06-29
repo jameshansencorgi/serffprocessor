@@ -59,8 +59,10 @@ A run is acceptable only when **all** hold:
    estimates with no variance. **Gate should require K-run stability (e.g. min over 3 runs).**
 5. **Coverage/scope/role under-scored.** Strict recall checks value+key; coverage accuracy is reported
    but not gated (regex sets coverage on only 2/28 matches). role/scope/unit are not evaluated at all.
-6. **Not reproducible off this machine.** The eval reads `data/processed/` which is gitignored, so the
-   harness can't run on a fresh checkout or in CI. Commit a tiny redacted fixture corpus.
+6. ~~**Not reproducible off this machine.**~~ ADDRESSED: the 10 eval docs are committed under
+   `tests/golden/fixtures/`; the scorer and tests fall back to them when `data/processed/` is absent,
+   and a deterministic `test_regex_pipeline_gate_no_contradictions_and_recall_floor` now gates the
+   regex path in CI (contradictions = 0, strict recall ≥ floor).
 7. **Recall, not precision, on volume.** A model emitting many extra facts isn't penalised beyond the
    hallucination/none counts; there is no full-precision measure against an exhaustive label set.
 

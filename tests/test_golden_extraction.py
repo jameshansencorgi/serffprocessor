@@ -1,11 +1,12 @@
 """Golden-set regression gates for the build->test->improve loop.
 
-The full scoreboard lives in scripts/score_extraction.py. These tests pin the
-behaviours we've fixed so they can't regress. The corpus under data/processed/text
-is gitignored, so the corpus-backed tests skip gracefully when it's absent.
+These tests pin the behaviours we've fixed so they can't regress. The corpus resolves to
+the committed fixtures (tests/golden/fixtures) when the full local corpus is absent, so the
+corpus-backed tests run on a fresh checkout / CI.
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -16,8 +17,20 @@ from serff_intel.extract.objections import extract_objection_facts
 from serff_intel.extract.rate_impact import extract_rate_facts
 
 ROOT = Path(__file__).resolve().parents[1]
-TEXTDIR = ROOT / "data/processed/text"
+_REAL = ROOT / "data/processed/text"
+TEXTDIR = _REAL if _REAL.exists() else (ROOT / "tests/golden/fixtures")
 GOLDEN = yaml.safe_load((ROOT / "tests/golden/expected_facts.yml").read_text())
+
+
+def test_regex_pipeline_gate_no_contradictions_and_recall_floor() -> None:
+    """Deterministic CI gate on the regex path (runs via committed fixtures): no wrong
+    values on evaluated slots, and strict recall does not regress below the committed floor."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import eval_extraction as ev
+
+    metrics = ev.compute(ev.regex_run())
+    assert metrics["contradictions"] == [], metrics["contradictions"]
+    assert metrics["strict_recall"] >= 0.60, metrics["strict_recall"]
 
 
 def _trucking(text: str) -> list:

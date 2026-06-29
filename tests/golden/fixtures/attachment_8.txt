@@ -1,0 +1,206 @@
+Exhibit R1
+Accredited Surety and Casualty Company, Inc.
+Commercial Auto
+Projected After-Tax Rate of Return
+Operating Return
+(1) Earned Premium 100.0%
+(2) Expected Loss & Loss Adjustment Expenses (Exhibit R4) 58.1%
+(3) Commission & Brokerage Fees (Exhibit R4) 25.7%
+(4) General & Other Acquisition Expenses (Exhibit R4) 4.6%
+(5) Taxes, Licenses & Fees (Exhibit R4) 2.6%
+(6) Underwriting Profit Before Federal Income Tax = (1) - (2) - (3) - (4) - (5) 9.0%
+(7) Federal Income Tax on Underwriting Profit = (6) x 21% 1.9%
+(8) Underwriting Profit After Federal Income Tax = (6) - (7) 7.1%
+(9) After-Tax Inv. Income on Policyholder Supplied Funds (Exhibit R2.1) 0.6%
+(10) After-Tax Return from Insurance Operations = (8) + (9) 7.7%
+Total Rate of Return
+(11) Premium to Surplus Ratio (Exhibit R3) 0.44
+(12) After-Tax Investment Income on Surplus (Exhibit R2.3) 0.7%
+(13) Total After-Tax Rate of Return on Statutory Surplus = (10) x (11) + (12) 4.1%
+
+Exhibit R2.1
+Accredited Surety and Casualty Company, Inc.
+Commercial Auto
+Estimated Investment Earnings on Policyholder Supplied Funds
+($000)
+(A) Earned Premium 88,546
+(B) Unearned Premium Reserve
+(1) Average Unearned Premium Reserve 39,151
+(2) Percentage Pre-Paid Expense 30.6%
+(a) Commission & Brokerage Fees (Exhibit R4) 25.7%
+(b) 50% of General & Other Acq. Expenses (Exhibit R4) 2.3%
+(c) Taxes, Licenses & Fees (Exhibit R4) 2.6%
+(3) Deduction for Federal Income Taxes Payable 4.2%
+(4) Total Prepaid Expense = (B).(1) x [(B).(2) + (B).(3)] 13,624
+(5) Portion Subject to Investment Income = (B).(1) - (B).(4) 25,526
+(C) Delayed Remission of Premiums
+(1) Average Agents' Balance as % of Premium 8.4%
+(2) Total Delayed Remission = (A) x (C).(1) 7,418
+(D) Loss & LAE Reserve
+(1) Expected Loss & LAE Ratio (Exhibit R4) 58.1%
+(2) Expected Losses & LAE = (A) x (D).(1) 51,445
+(3) Reserve to Incurred Ratio 125.0%
+(4) Expected Loss & LAE Reserves = (D).(2) x (D).(3) 64,282
+(E) Policyholder Funds Subject to Investment Income = (B).(5) - (C).(2) + (D).(4) 82,391
+(F) 2024 After Tax Rate of Return 0.7%
+(G) Investment Earnings on Policyholder Supplied Funds = (E) x (F) 560
+(H) After-Tax Investment Income on Policyholder Supplied Funds = (G) / (A) 0.6%
+
+Exhibit R2.2
+Accredited Surety and Casualty Company, Inc.
+Commercial Auto
+Source Notes for Exhibit R2.1
+($000)
+Line
+(A) Calendar Year 2024 Earned Premium 88,546
+2024 Company IEE, Part III, Column 3, Line(s) 19.3, 19.4
+(B).(1) Selected Average Unearned Premium Reserve = (3) 39,151
+(1) Calendar Year 2024 Unearned Premium Reserve 46,711
+2024 Company IEE, Part III, Column 19, Line(s) 19.3, 19.4
+(2) Calendar Year 2023 Unearned Premium Reserve 31,590
+2023 Company IEE, Part III, Column 19, Line(s) 19.3, 19.4
+(3) Indicated Average Unearned Premium Reserve = [(1) x (2)] / 2 39,151
+(B).(3) The Tax Reform Act of 1986 taxes 20% of the unearned premium reserve. This was not
+changed by the Tax Cuts and Jobs Act of 2017. At a corporate rate of 21%, this tax equals
+4.2% ( = 20% x 21%).
+(C).(1) Selected Agents' Balances = (3) 8.4%
+(1) Calendar Year 2024 Agents' Balances 8.8%
+2024 Company IEE, Part III, Column 22, Line(s) 19.3, 19.4
+(2) Calendar Year 2023 Agents' Balances 7.9%
+2023 Company IEE, Part III, Column 22, Line(s) 19.3, 19.4
+(3) Indicated Agents' Balances = [(1) + (2)] / 2 8.4%
+(D).(3) Selected Reserve to Incurred Ratio = (5) 125.0%
+(1) Calendar Year 2024 Unpaid Loss & LAE 115,527
+2024 Company IEE, Part III, Columns 13, 15, 17, Line(s) 19.3, 19.4
+(2) Calendar Year 2023 Unpaid Loss & LAE 101,923
+2023 Company IEE, Part III, Columns 13, 15, 17, Line(s) 19.3, 19.4
+(3) Average Unpaid Loss & LAE = [(1) + (2)] / 2 108,725
+(4) Calendar Year 2024 Incurred Loss & LAE 87,013
+2024 Company IEE, Part III, Columns 7, 9, 11, Line(s) 19.3, 19.4
+(5) Indicated Reserve to Incurred Ratio = (3) / (4) 125.0%
+
+Exhibit R2.3
+Accredited Surety and Casualty Company, Inc.
+Commercial Auto
+Source Notes for Exhibit R2.1 (Continued)
+($000)
+Line (F)
+(1) (2) (3) (4)
+= 100% - (2) = (1) x (3)
+2024 2024
+Inv. Income Tax After-Tax After-Tax
+Investment Category Earned Rate Portion Inv. Income
+Taxable Bonds 12,877 21.00% 79.00% 10,173
+Non-Taxable Bonds 16 5.25% 94.75% 15
+Preferred Stocks 0 21.00% 79.00% 0
+Common Stocks 9 21.00% 79.00% 7
+Common Stocks in Affiliates 0 13.13% 86.88% 0
+Cash 3,357 21.00% 79.00% 2,652
+All Other Investments 6 21.00% 79.00% 5
+(5) Total 16,264 12,851
+2024 Company Annual Statement, Page 12 - Exhibit of Net Investment Income, Lines 1 to 10, Column 2
+(6) Total Investment Expense 11,462 21.00% 79.00% 9,055
+2024 Company Annual Statement, Page 12 - Exhibit of Net Investment Income, Line 16
+(7) Net Inv. Income Earned = (5) - (6) 4,803 3,797
+(8) Invested Assets as of 12/31/2024 340,906
+2024 Company Annual Statement, Page 2, Line 12, Column 3
+(9) Invested Assets as of 12/31/2023 386,965
+2024 Company Annual Statement, Page 2, Line 12, Column 4
+(10) Average Invested Assets = [(8) + (9)] / 2 363,935
+(11) After-Tax Rate of Return on Invested Assets = (7) / (10) 1.0%
+(12) (13) (14) (15) (16)
+= [(12) + (13)] / 2
+Beginning Ending Average
+Calendar Invested Invested Invested Net Realized Net Unrealized
+Year Assets Assets Assets Capital Gains Capital Gains
+2022 232,830 471,636 352,233 (1,425) (1,091)
+2023 471,636 386,965 429,300 (2,089) 713
+2024 386,965 340,906 363,935 (1,679) 307
+Total 1,091,431 1,199,507 1,145,469 (5,193) (71)
+(17) Net Realized Capital Gains Ratio = (15) / (14) -0.5%
+(18) Net Unrealized Capital Gains Ratio = (16) / (14) 0.0%
+(19) Tax Rate on Capital Gains 21.0%
+(20) After-Tax Realized Capital Gains = (17) x [100% - (19)] -0.4%
+(21) After-Tax Unrealized Capital Gains = (18) x [100% - (19)] 0.0%
+(22) Indicated After-Tax Total Rate of Return = (11) + (20) + (21) 0.7%
+(23) Selected After-Tax Total Rate of Return 0.7%
+Notes:
+(12) from 2023, 2022, 2021 Company Annual Statements, Page 2, Line 12, Column 3
+(13) from 2024, 2023, 2022 Company Annual Statements, Page 2, Line 12, Column 3
+(15) from 2024, 2023, 2022 Company Annual Statements, Page 12 - Exhibit of Capital Gains (Losses), Line 10, Column 3
+(16) from 2024, 2023, 2022 Company Annual Statements, Page 12 - Exhibit of Capital Gains (Losses), Line 10, Column 4
+
+Exhibit R3
+Accredited Surety and Casualty Company, Inc.
+Commercial Auto
+Premium to Surplus Ratio
+($000)
+(1) Calendar Year 2024 Beginning Surplus As Regards Policyholders 69,399
+2024 Company Annual Statement, Page 3, Line 37, Column 2
+(2) Calendar Year 2024 Ending Surplus As Regards Policyholders 52,094
+2024 Company Annual Statement, Page 3, Line 37, Column 1
+(3) Calendar Year 2024 Average Surplus Level = [(1) + (2)] / 2 60,747
+(4) Calendar Year 2024 Net Written Premiums 30,743
+2024 Company IEE, Part II, Line 35, Column 1
+(5) 2024 Net Premium to Surplus Ratio = (4) / (3) 0.51
+(6) Calendar Year 2023 Beginning Surplus As Regards Policyholders 72,462
+2023 Company Annual Statement, Page 3, Line 35, Column 2
+(7) Calendar Year 2023 Ending Surplus As Regards Policyholders 69,399
+2023 Company Annual Statement, Page 3, Line 35, Column 1
+(8) Calendar Year 2023 Average Surplus Level = [(6) + (7)] / 2 70,931
+(9) Calendar Year 2023 Net Written Premiums 26,803
+2023 Company IEE, Part II, Line 35, Column 1
+(10) 2023 Net Premium to Surplus Ratio = (9) / (8) 0.38
+(11) Average Net Premium to Surplus Ratio = [(5) + (10)] / 2 0.44
+(12) Selected Premium to Surplus Ratio 0.44
+
+Exhibit R4
+Accredited Surety and Casualty Company, Inc.
+Commercial Auto
+Projected Expense Ratios
+($000)
+2022 2023 2024 3 Year Total/Average Selected
+($000) % ($000) % ($000) % ($000) Avg % W Avg % %
+(1) Premiums Written 108,148 79,060 103,667 2 90,875
+(2) Premiums Earned 99,144 90,895 88,546 2 78,585
+(3) Commission 19,464 18.0% 13,325 16.9% 17,429 16.8% 50,218 17.2% 17.3% 25.7%
+(4) Other Acquisition - 0.0% - 0.0% - 0.0% - 0.0% 0.0% 0.0%
+(5) General Expenses 3 ,173 3.2% 4 ,329 4.8% 4 ,303 4.9% 11,805 4.3% 4.2% 4.6%
+(6) Taxes, Licenses, Fees 2 ,430 2.2% 2 ,532 3.2% 2 ,217 2.1% 7,179 2.5% 2.5% 2.6%
+(7) Total Expenses = (3) + (4) + (5) + (6) 23.4% 24.8% 23.8% 24.0% 24.0% 32.9%
+(8) Profit Load 9.0%
+(9) Total Expenses & Profit = (7) + (8) 41.9%
+(10) Permissible Loss & LAE Ratio = 100% - (9) 58.1%
+(11) AOE 7 ,177 7.2% 6 ,411 7.1% 7 ,149 8.1% 20,737 7.5% 7.4% 2.5%
+(12) DCCE 1 ,994 2.0% 3 ,682 4.1% 1 ,327 1.5% 7,003 2.5% 2.5% 0.0%
+(13) Total LAE = (11) + (12) 9.3% 11.1% 9.6% 10.0% 10.0% 2.5%
+(14) Permissible Loss & DCCE Ratio = (10) - (11) 55.6%
+(15) Permissible Loss Ratio = (10) - (13) 55.6%
+Notes:
+(1) from Company 2024, 2023, 2022 IEEs, Part III, Column 1, Line(s) 19.3, 19.4.
+(2) from Company 2024, 2023, 2022 IEEs, Part III, Column 3, Line(s) 19.3, 19.4.
+(3) from Company 2024, 2023, 2022 IEEs, Part III, Column 23, Line(s) 19.3, 19.4.
+(4) from Company 2024, 2023, 2022 IEEs, Part III, Column 27, Line(s) 19.3, 19.4.
+(5) from Company 2024, 2023, 2022 IEEs, Part III, Column 29, Line(s) 19.3, 19.4.
+(6) from Company 2024, 2023, 2022 IEEs, Part III, Column 25, Line(s) 19.3, 19.4.
+(3) and (6) shown as a percent of (1).
+(4), (5), (11) and (12) shown as a percent of (2).
+(11) from Company 2024, 2023, 2022 IEEs, Part III, Column 11, Line(s) 19.3, 19.4.
+(12) from Company 2024, 2023, 2022 IEEs, Part III, Column 9, Line(s) 19.3, 19.4.
+
+Exhibit R5
+Accredited Surety and Casualty Company, Inc.
+Commercial Auto
+Derivation of Loss Cost Multiplier
+(1) Commission & Brokerage Fees (Exhibit R4) 25.7%
+(2) Other Acquisition Expenses (Exhibit R4) 0.0%
+(3) General Expenses (Exhibit R4) 4.6%
+(4) Taxes, Licenses & Fees (Exhibit R4) 2.6%
+(5) Profit Load (Exhibit R4) 9.0%
+(6) Total Expenses & Profit = (1) + (2) + (3) + (4) + (5) 41.9%
+(7) Permissible Loss & LAE Ratio = 100% - (6) 58.1%
+(8) Loss Cost Modification Factor 1.163
+(9) Indicated Loss Cost Multiplier = (8) / (7) 2.002
+(10) Risk Load 5.3%
+(11) Indicated Loss Cost Multiplier Offset for Risk Load (9)/[1.00+(10)] 1.901
+(12) Selected Loss Cost Multiplier 1.901

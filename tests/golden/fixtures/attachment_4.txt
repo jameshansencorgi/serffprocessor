@@ -1,0 +1,74 @@
+PC367 | 1220
+Exhibit E - Expense Information - Including Disallowed Expense Adjustment
+Company name: Accredited Surety and Casualty Company, Inc.
+Company NAIC number: 26379
+Line: 19.4
+Coverage/form: Commercial Auto Liability
+Underwriting Expenses as Percent of Direct Premiums Written
+20 24 20 23 20 22
+Texas (Annual Statement Exhibit of Premiums and Losses - Statutory Amount Amount Amount Mean
+Page 14) (000) Percent (000) Percent (000) Percent Percent
+1. Premiums Written $ 21,482 --- $ 14,152 --- $ 27,356 --- ---
+2. Premiums Earned $ 19,378 90.2 % $ 19,135 135.2 % $ 24,031 87.8 % 104.4 %
+3. Commission & Brokerage Expenses Incurred $ 3,543 16.5 % $ 2,407 17.0 % $ 4,980 18.2 % 17.2 %
+4. Taxes, Licenses & Fees Incurred $ 382 1.8 % $ 483 3.4 % $ 439 1.6 % 2.3 %
+Countrywide
+5. Premiums Written (IEE, Part III) $ 9 9,924 --- $ 7 6,476 --- $ 1 00,782 --- ---
+6. Premiums Earned (IEE, Part III) $ 85,651 100 % $ 86,081 100 % $ 92,862 100 % 100 %
+7. Commission & Brokerage Expenses Incurred (IEE, Part III) $ 16,714 1 6.7 % $ 12,806 16.7 % $ 17,714 17.6 % 17.0 %
+8. Other Acquisition Expenses Incurred (IEE, Part III) $ 0 --- $ 0 --- $ 0 --- ---
+a. Disallowed Advertising Expenses $ 0 --- $ 0 --- $ 0 --- ---
+b. Adjusted Other Acquisition Expenses Incurred $ 0 0.0 % $ 0 0.0 % $ 0 0.0 % 0.0 %
+9. General Expenses Incurred (IEE, Part III) $ 4,148 4.8 % $ 0 0.0 % $ 2,957 3.2 % ---
+a. Loss Control & Safety Engineering Expenses $ 0 0 % $ 0 0 % $ 0 0 % 0 %
+b. Lobbying Expenses $ --- $ --- $ --- ---
+c. Amounts Paid by an Insurer as Damages in a $ 0 $ 0 $ 0
+Suit Against the Insurer for Bad Faith or as --- --- --- ---
+Fines or Penalties for Violation of Law
+d. Contributions to Organizations Engaged in $ 0 $ 0 $ 0
+--- --- --- ---
+Legislative Advocacy
+e. Fees & Penalties Imposed on the Insurer for $ 0 $ 0 $ 0
+--- --- --- ---
+Civil or Criminal Violations of Law
+f. Contributions to Social, Religious, Political or $ 0 $ 0 $ 0
+--- --- --- ---
+Fraternal Organizations
+g. Fees & Assessments Paid to Advisory $ 0 $ 0 $ 0
+--- --- --- ---
+Organizations %
+h. Disallowed General Expenses $ 0 0.0 % $ 0 0.0 % $ 0 0.0 % ---
+i. Adjusted General Expense Percent --- 4.8 % --- 0.0 % --- 3.2 % 2.7 %
+j. Formula General Expense Percent --- 4.8 % --- 0.0 % --- 3.2 % 2.7 %
+Attach additional Exhibit E pages as needed.
+
+PC367 | 1220
+Company name: Accredited Surety and Casualty Company, Inc.
+Company NAIC number: 26379
+Line: 19.4
+Coverage/form: Commercial Auto Liability
+Loss Adjustment Expesnses as a Percent of Direct Incurred Losses
+20 24 20 23 20 22
+Texas (Annual Statement Exhibit of Premiums and Losses - Amount Amount Amount Mean
+Statutory Page 14) (000) Percent (000) Percent (000) Percent Percent
+10. Direct Incurred Losses $ 12,468 --- $ 8,185 --- $ 18,573 --- ---
+11. DCCE $ 378 3.0 % $ 972 11.9 % $ 581 3.1 % 6.0 %
+Countrywide (IEE, Part III)
+12. Direct Incurred Losses $ 77,346 --- $ 44,790 --- $ 57,689 --- ---
+13. DCCE Incurred $ 1,035 1.3 % $ 3,561 8.0 % $ 1,954 3.4 % 4.2 %
+14. Adjusting and Other Expenses Incurred $ 6,817 8.8 % $ 6,251 14.0 % $ 6,757 11.7 % 11.5 %
+$ $
+Expense Provisions Underlying Your Proposed Rates, as a Percent of Premium
+15. Commission & Brokerage Expenses Incurred 25.70 %
+16. Other Acquisition Expenses Incurred 0.00 %
+17. General Expenses Incurred 4.60 %
+18. Taxes, Licenses & Fees Incurred 2.60 %
+19. Premium Discount/Expense Constant 0.00 %
+20. Profit 9.00 %
+21. Total Expenses & Profit (sum of Lines 15 through 20) 41.90 %
+22. Permissible Loss & LAE Ratio (1 - Line 21) 58.10 %
+Loss Adjustment Expense Provisions Underlying Your Proposed Rates, as a Percent of Losses
+23. DCCE 0.0 %
+24. Adjusting and Other Expenses 4.5 %
+25. Total LAE (sum of Lines 23 & 24) 4.5 %
+Attach additional Exhibit E pages as needed.

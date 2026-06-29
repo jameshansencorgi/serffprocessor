@@ -1,0 +1,214 @@
+4. Trend & Onlevel
+Trend and On-Leveling - Brazos Whitehill
+AL
+2020 2021 2022 2023 2024 2025
+Calendar Year 2020 2021 2022 2023 2024 2025 Prospective
+Premium Trend 0.0% 0.0% 0.0% 0.0% 0.0% 0.0% 0.0%
+Exposure Trend 0.0% 0.0% 0.0% 0.0% 0.0% 0.0% 0.0%
+Total Prem/Expos Trend 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+Frequency Trend 3.6% 3.6% 3.6% 3.6% 3.6% 3.6% 3.6%
+Severity Trend 10.1% 10.1% 10.1% 10.1% 10.1% 10.1% 10.1%
+Total Loss Trend 1.141 1.141 1.141 1.141 1.141 1.141 1.141
+Rate Change 0% 0.9% 6.8% 1.9% 6.6% 7.8% 20.8%
+Loss Trend 2.214 2.020 1.771 1.552 1.360 1.232 1.232
+Current Premium/Rate Level 1.00 1.01 1.08 1.10 1.17 1.26 1.52
+On-Level Factor 1.524 1.510 1.414 1.387 1.302 1.208 1.000
+Prospective Effective Date 11/1/2025
+
+5. Large Loss Load
+Large Loss Threshold Selection - Brazos Whitehill
+LOB 1: AL
+250,000 500,000
+Uncapped Total xCAT
+Excess GU Excess Losses Excess Non-Excess Excess Excess GU Excess Losses Excess Non-Excess Excess Selected
+AY Reported Claim % Claims % Claims Notes
+Claims Losses of Cap Losses Ratio Claims Losses of Cap Losses Ratio Attritional Loss
+Losses Counts
+Year 1 2020 1,231,144 15 1 6.7% 1,000,000 750,000 481,144 156% 1 6.7% 1 ,000,000 5 00,000 731,144 68% 731,144
+Selecting $500k since losses excess
+Year 2 2021 3,926,370 112 2 1.8% 1,411,064 911,064 3,015,306 30% 1 0.9% 1 ,000,000 5 00,000 3 ,426,370 15% 3,426,370
+of that threshold are stable in ratio
+Year 3 2022 8,240,196 184 6 3.3% 4,127,944 2,627,944 5,612,252 47% 3 1.6% 3 ,000,000 1,500,000 6 ,740,196 22% 6,740,196
+as a % of loss $ and in percentage
+Year 4 2023 11,500,516 177 9 5.1% 5,288,841 3,038,841 8,461,675 36% 5 2.8% 3 ,843,452 1,343,452 10,157,064 13% 10,157,064
+of claim counts. Using 1.16 factor
+Year 5 2024 9,644,246 210 9 4.3% 4,744,512 2,494,512 7,149,734 35% 3 1.4% 2 ,517,813 1,017,813 8 ,626,434 12% 8,626,434
+due to potential for development
+Year 6 2025 2,357,515 96 1 1.0% 650,000 400,000 1,957,515 20% 1 1.0% 650,000 1 50,000 2 ,207,515 7% 2,207,515
+and compensating for loss trend.
+Total 3 6,899,987 794 2 8 3.5% 1 7,222,361 1 0,222,361 2 6,677,626 38% 14 1.8% 12,011,265 5,011,265 31,888,722 16% 31,888,722
+Stdev: 1.9% 46.2% 2.0% 20.9%
+Selected Large Loss Threshold 500,000 Mean: 3.7% 54.0% 2.4% 22.8%
+Selected Large Loss Load 1.16 CV: 0.52 0.86 0.83 0.91
+6 CI: 1.5% 37.0% 1.6% 16.7%
+LOB 2:
+6 CI: #DIV/0! #DIV/0! #DIV/0! #DIV/0!
+
+6. LDFs
+Cumulative Loss Development Factors
+ISO Size of Loss Matrix, Data Implied, with SOLM
+Trucks/Tractors/Trailers Tail
+AL SOLM AL Data
+AL SOLM
+Age Incurred Incurred AL Data
+Paid CDF
+CDF CDF Paid CDF
+3 9.66 20.66 60.86 625.38
+6 4.83 10.33 15.93 73.57
+9 3.22 6.89 7.98 23.70
+12 2.42 5.17 4.27 10.90
+15 2.10 4.01 3.04 7.39
+18 1.85 3.28 2.57 5.37
+21 1.66 2.77 2.24 3.99
+24 1.50 2.40 1.96 3.09
+27 1.42 2.13 1.74 2.51
+30 1.34 1.92 1.55 2.11
+33 1.27 1.75 1.40 1.84
+36 1.21 1.60 1.31 1.65
+39 1.18 1.50 1.22 1.51
+42 1.14 1.41 1.14 1.41
+45 1.11 1.32 1.11 1.32
+48 1.08 1.25 1.08 1.25
+51 1.07 1.21 1.07 1.21
+54 1.06 1.17 1.06 1.17
+57 1.04 1.13 1.04 1.13
+60 1.03 1.10 1.03 1.10
+63 1.03 1.08 1.03 1.08
+66 1.02 1.07 1.02 1.07
+
+7. A-Priori
+Cape Cod / Stanard-Buhlmann A-Priori Loss Ratio
+AL Auto Liability
+Incurred Cape Cod Method Paid Cape Cod Method
+On-Leveled AL SOLM
+Written Earned On-Level Used-Up Trended Capped Incurred Cape AL SOLM Used-Up Trended Capped Cape Cod A-
+AY Earned Incurred
+Premium Premium Factor Premium Incurred Losses Cod A-Priori Paid CDF Premium Paid Losses Priori LR
+Premium CDF
+2020 1 ,772,633 1,772,633 1.52 2,701,946 1.022 2,642,700 1,618,753 61.3% 1.070 2,525,748 1,452,703 57.5%
+2021 9 ,469,939 9,469,939 1.51 14,299,820 1.057 1 3,529,118 6,921,169 51.2% 1.170 1 2,223,518 6,741,392 55.2%
+2022 14,877,161 14,877,161 1.41 21,033,436 1.145 1 8,370,700 11,935,318 65.0% 1.405 1 4,969,434 1 0,301,254 68.8%
+2023 13,434,029 13,434,029 1.39 18,638,574 1.343 1 3,882,597 15,766,889 113.6% 1.921 9,703,405 1 1,488,910 118.4%
+2024 14,520,853 14,520,853 1.30 18,902,923 1.853 1 0,203,282 11,734,613 115.0% 3.276 5,769,765 3,740,525 64.8%
+2025 14,411,023 8,402,311 1.21 10,151,077 4.831 2,101,385 2,720,283 129.5% 10.330 982,667 303,061 30.8%
+Total 68,485,640 6 2,476,928 8 5,727,776 60,729,782 5 0,697,026 83.5% 46,174,536 34,027,845 73.7%
+Selected A-Priori 90.9%
+Comments on Selection: Selected average of paid and incurred cape cod a-priori from 2022 - 2024.
+
+8. Loss Development
+Loss Development and Ultimate Loss Selection
+AL
+Losses Capped at 500000, Excluding CAT Trended Losses
+Trended
+On-Leveled Paid Loss Total Incurred Trended
+Total Capped Loss Trended Actual Incurred Onleveled
+AY Earned Capped at Capped at Capped
+OS Trend Capped Paid LR Capped
+Premium 500000 500000 Incurred
+Incurred LR
+2020 2,701,946 656,144 731,144 75,000 2.214 1 ,452,703 1,618,753 69.5% 59.9%
+2021 14,299,820 3,337,370 3 ,426,370 89,000 2.020 6 ,741,392 6,921,169 41.5% 48.4%
+2022 21,033,436 5,817,396 6 ,740,196 922,800 1.771 1 0,301,254 11,935,318 55.4% 56.7%
+2023 18,638,574 7,401,181 1 0,157,064 2,755,883 1.552 1 1,488,910 15,766,889 85.6% 84.6%
+2024 18,902,923 2,749,762 8 ,626,434 5,876,672 1.360 3,740,525 11,734,613 66.4% 62.1%
+2025 10,151,077 245,935 2 ,207,515 1,961,580 1.232 303,061 2,720,283 28.1% 26.8%
+Total 8 5,727,776 20,207,787 31,888,722 1 1,680,935 34,027,845 5 0,697,026 59.1% 59.1%
+
+8. Loss Development
+Loss Development and Ultimate Loss Selection
+AL
+Bornhuetter-Ferguson
+Loss Development Factors Chain-Ladder Ultimates Benktander Ultimates 90.9%
+Ultimates
+AL SOLM
+AL SOLM Case OS Paid Chain Incurred Chain Case OS Chain Paid Incurred Expected Loss
+AY Incurred Paid BF Incurred BF
+Paid CDF CDF* Ladder Ladder Ladder Benktander Benktander Ratio Method
+CDF
+2020 1.070 1.022 1.507 1,554,045 1 ,655,043 1,702,870 1,612,925 1,672,627 1,557,885 1,655,429 2,456,953
+2021 1.170 1.057 1.590 7,886,493 7 ,315,442 7,027,293 8,629,430 7,621,990 7,994,366 7,331,963 13,003,218
+2022 1.405 1.145 1.783 1 4,474,213 1 3,665,279 13,214,571 15,815,417 14,356,617 14,860,886 13,752,799 19,126,279
+2023 1.921 1.343 2.138 2 2,068,223 2 1,168,398 20,635,287 19,613,904 20,091,629 20,891,644 20,893,640 16,948,565
+2024 3.276 1.853 2.962 1 2,254,721 2 1,739,915 27,420,962 15,682,865 19,645,435 14,636,488 20,775,978 17,188,945
+2025 10.330 4.831 8.195 3,130,662 1 3,140,766 20,113,322 8,640,147 10,040,089 8,106,805 10,681,963 9,230,652
+Total 61,368,356 78,684,844 9 0,114,306 6 9,994,689 7 3,428,386 6 8,048,074 75,091,773 77,954,613
+*Case Outstanding CDF was calculated using the formula [ 1 - 1/Paid CDF ] / [ 1/Incurred CDF - 1/Paid CDF ]
+
+8. Loss Development
+Loss Development and Ultimate Loss Selection
+AL
+Trended,
+Trended Capped Capped ULR,
+Selected
+AY Selected Untrended Prior to Trend Comments
+Capped
+Capped ULR Ultimate & On-Level
+Ultimate
+2020 1,604,544 59.4% 724,726 40.9% Selecting average of paid and incurred chain ladder
+2021 7,600,967 53.2% 3,762,909 39.7% Selecting average of paid and incurred chain ladder
+2022 14,010,948 66.6% 7,912,360 53.2% Selecting average of incurred chain ladder and incurred BF
+2023 20,630,013 110.7% 13,289,899 98.9% Selecting average of incurred chain ladder and incurred BF
+2024 19,645,435 103.9% 14,441,895 99.5% Selecting incurred BF method
+2025 10,040,089 98.9% 8,147,549 97.0% selecting incurred BF method
+Total 7 3,531,996 85.8% 48,279,338 77.3%
+
+9. LOB Summary
+Line of Business Summary - Brazos Whitehill
+AL Auto Liability
+Premiums Trended Losses, Excl. Catastrophes
+On-Leveled Total Open Trended
+Written Earned Trended Total Trended Total Trended
+AY Earned Claim Claim Capped
+Premium Premium Paid Incurred Capped Paid
+Premium Count Count Incurred
+2020 1,772,633 1,772,633 2,701,946 15 1 2,559,704 2,725,754 1,452,703 1,618,753
+2021 9,469,939 9,469,939 14,299,820 112 3 7,751,377 7,931,155 6,741,392 6,921,169
+2022 14,877,161 14,877,161 21,033,436 184 5 1 2,957,405 1 4,591,469 10,301,254 11,935,318
+2023 13,434,029 13,434,029 18,638,574 177 2 5 1 3,353,860 1 7,852,340 11,488,910 15,766,889
+2024 14,520,853 14,520,853 18,902,923 210 6 8 3,740,525 1 3,119,152 3,740,525 11,734,613
+2025 14,411,023 8,402,311 10,151,077 96 6 9 303,061 2,905,126 303,061 2,720,283
+Total 68,485,640 6 2,476,928 85,727,776 794 171 40,665,933 59,124,995 3 4,027,845 5 0,697,026
+
+9. LOB Summary
+Line of Business Summary - Brazos Whitehill
+AL
+Selected Trended, On-leveled Ultimates Untrended Ultimates
+Trended, Trended, Selected
+Actual Selected Ultimate, Trended, Ultimate, Untrended
+Onleveled Onleveled Capped
+AY Uncapped Capped Loaded for Onleveled Loaded for Capped &
+Uncapped Capped Untrended
+Incurred LR Ultimate Large Losses Loaded ULR Large Losses Loaded ULR
+Incurred LR Incurred LR Ultimate
+2020 100.9% 59.9% 69.5% 1,604,544 1,868,509 69.2% 724,726 843,951 47.6%
+2021 55.5% 48.4% 41.5% 7,600,967 8,851,407 61.9% 3,762,909 4,381,947 46.3%
+2022 69.4% 56.7% 55.4% 14,010,948 16,315,897 77.6% 7,912,360 9,214,027 61.9%
+2023 95.8% 84.6% 85.6% 20,630,013 24,023,869 128.9% 13,289,899 1 5,476,228 115.2%
+2024 69.4% 62.1% 66.4% 19,645,435 22,877,316 121.0% 14,441,895 1 6,817,739 115.8%
+2025 28.6% 26.8% 28.1% 10,040,089 11,691,789 115.2% 8,147,549 9,487,907 112.9%
+Total 69.0% 59.1% 59.1% 73,531,996 85,628,787 99.9% 48,279,338 56,221,799 90.0%
+
+10. Indication
+Indicated Expected Loss Ratio and Rate Need - Brazos Whitehill
+Trended,
+Trended
+Selected Onleveled &
+Calendar / Written Earned On-Leveled Trended Capped Trended Capped Onleveled
+Ultimate, Capped Loaded
+Accident Year Premium Premium Earned Premium Paid Loss Incurred Loss Capped
+and Loaded Ultimate Non-
+Incurred LR
+CAT LR
+2020 1 ,772,633 1,772,633 2,701,946 1,452,703 1,618,753 59.9% 1,868,509 69.2%
+2021 9 ,469,939 9,469,939 14,299,820 6,741,392 6,921,169 48.4% 8,851,407 61.9%
+2022 14,877,161 1 4,877,161 21,033,436 10,301,254 11,935,318 56.7% 16,315,897 77.6%
+2023 13,434,029 1 3,434,029 18,638,574 11,488,910 15,766,889 84.6% 24,023,869 128.9%
+2024 14,520,853 1 4,520,853 18,902,923 3,740,525 11,734,613 62.1% 22,877,316 121.0%
+2025 14,411,023 8,402,311 10,151,077 303,061 2,720,283 26.8% 11,691,789 115.2%
+Total 68,485,640 62,476,928 85,727,776 34,027,845 50,697,026 59.1% 8 5,628,787 99.9%
+Loss Ratio and Indication:
+Permissible Loss & LAE Ratio 58.8%
+Total LAE 2.5%
+Permissible Loss Ratio 56.3%
+Expected Loss Ratio 121.7% Selecting average of most recent three years
+Indicated Rate Change 116.2%

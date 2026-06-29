@@ -1,0 +1,29 @@
+PC366 | 1220
+Exhibit D – Historical Experience
+Company name: Accredited Surety and Casualty Company, Inc.
+Company NAIC number: 26379
+Line: 19.4
+Coverage/form: Commercial Auto Liability
+Provide the following information on a calendar year basis. The information should be the amounts
+(or a subset of the amounts) reported on the annual statement.
+Texas
+(A) (B) (C) (D) (E)
+Direct Direct Direct Direct Incurred Loss &
+Premiums Premiums Losses and DCCE Losses and DCCE DCCE Ratio
+Year Written Earned Paid Incurred (D) ÷ (B)
+2024 21,482,380 19,377,950 8,739,868 12,845,497 66.3%
+2023 14,152,456 19,134,673 10,816,112 9,157,221 47.9%
+2022 27,355,661 24,030,820 6,731,202 19,154,247 79.7%
+2021 20,549,601 15,021,152 4,320,703 10,811,175 72.0%
+2020 7,049,697 5,103,479 51,655 1,683,855 33.0%
+Countrywide
+(A) (B) (C) (D) (E)
+Direct Direct Direct Direct Incurred Loss &
+Premiums Premiums Losses and DCCE Losses and DCCE DCCE Ratio
+Year Written Earned Paid Incurred (D) ÷ (B)
+2024 99,923,643 85,651,119 61,283,620 78,380,318 91.5%
+2023 76,476,136 86,081,208 34,480,620 48,350,430 56.2%
+2022 100,782,222 92,861,762 18,375,800 59,642,874 64.2%
+2021 73,072,599 58,928,133 10,420,671 33,574,998 57.0%
+2020 30,562,244 25,838,314 2,459,880 11,135,007 43.1%
+Attach additional Exhibit D pages as needed.
