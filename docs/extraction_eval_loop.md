@@ -21,12 +21,26 @@ Two recall numbers: **loose** (value appears anywhere on the page — optimistic
 (value + acceptable key, matched 1:1 so a single value can't satisfy two anchors — trustworthy).
 Always quote strict.
 
-| Run | loose recall | **strict recall** | vocab | contradictions | hallucination | gate |
+| Run | overall strict | **held-out strict** | vocab | contradictions | hallucination | gate |
 | --- | ---: | ---: | ---: | ---: | ---: | :--: |
-| Regex pipeline | 60% | **60%** | 100% | 1 | 0 | FAIL |
-| Haiku v1 (plain) | 97% | **71%** | 73% | 2 | 0 | FAIL |
-| Haiku v2 (key defs + few-shot) | 100% | **86%** | 86% | 0 | 0 | FAIL |
-| Opus v1 (plain) | 100% | **76%** | 76% | 0 | 22 | FAIL |
+| Regex pipeline | 63% | **69%** | 100% | 0 | 0 | FAIL |
+| Haiku v1 (plain) | 71% | (contaminated) | 73% | 2 | 0 | FAIL |
+| Haiku v2 (few-shot from eval docs) | 86% | **73%** | 86% | 0 | 0 | FAIL |
+| Haiku v3 (synthetic few-shot, eval fully held-out) | 80% | **65%** | 84% | 2 | 0 | FAIL |
+| Opus v1 (plain) | 76% | n/a | 76% | 0 | 22 | FAIL |
+
+> The gate now scores **held-out** recall (generalisation). Haiku v2's 86% was inflated by
+> eval-doc few-shot; with synthetic examples (v3) the honest held-out number is 65–73%, and the
+> v2→v3 swing is within n=1 run noise. **Prompt tweaking has plateaued.**
+
+### Diagnosis: where Haiku is stuck (≈65–73% held-out)
+The remaining misses and the contradictions are **`labeled_series` column-selection**, not vocabulary:
+v3 emitted `on_level_factor=1.37` (wrong column of `1.524 … 1.000`) and `permissible=56.3` instead of
+`58.8` (the page has two permissible ratios). Few-shot doesn't fix "which column / which of two."
+Next moves that could actually break the plateau (not more few-shot): (a) **K-run self-consistency**
+(run ×3, keep facts that agree — also gives the variance the gate needs); (b) a **verification pass**
+that re-checks each series/disambiguation pick against the row header; (c) feed the structured table
+cells (from `tables.py`) alongside the text so the model selects a cell, not a token.
 
 **Iteration 1 (Haiku v1 → v2)** added precise key definitions, the missing keys, and four
 worked examples. Real effect (strict): recall 71→86%, vocab 73→86%, **contradictions 2→0**,
