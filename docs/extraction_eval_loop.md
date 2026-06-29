@@ -17,18 +17,52 @@ set also seeds few-shot examples and a future fine-tune corpus.
 
 ## Results so far (10 real docs, 46-fact eval)
 
-| Run | Recall | Vocab accuracy | `key=none` | Hallucination | Notes |
-| --- | ---: | ---: | ---: | ---: | --- |
-| Regex pipeline | 60% | 100% | 0 | 0 | deterministic, free; weak on tables (grid 9%) |
-| Haiku v1 (plain prompt) | 97% | 73% | 35 | 0 | strong recall, loose vocab |
-| **Haiku v2 (key defs + few-shot)** | **100%** | **86%** | **4** | **0** | iteration 1 win |
-| Opus v1 (plain prompt) | 100% | 76% | 199 | 22 | exhaustive but costly + drifts |
+Two recall numbers: **loose** (value appears anywhere on the page — optimistic) and **strict**
+(value + acceptable key, matched 1:1 so a single value can't satisfy two anchors — trustworthy).
+Always quote strict.
 
-**Iteration 1 (Haiku v1 → v2)** added precise key definitions (distinguishing
-`experience_loss_ratio` from `expected_loss_ratio`), the missing keys (`experience_loss_ratio`,
-`earned_premium`, `incurred_loss`), and four worked examples targeting the observed failures
-(the formula-line `= 100% - (9) 58.1%` trap, experience rows, coverage matrices). Effect:
-recall 97→100%, vocab 73→86%, `none` drift 35→4, hallucination still 0.
+| Run | loose recall | **strict recall** | vocab | contradictions | hallucination | gate |
+| --- | ---: | ---: | ---: | ---: | ---: | :--: |
+| Regex pipeline | 60% | **60%** | 100% | 1 | 0 | FAIL |
+| Haiku v1 (plain) | 97% | **71%** | 73% | 2 | 0 | FAIL |
+| Haiku v2 (key defs + few-shot) | 100% | **86%** | 86% | 0 | 0 | FAIL |
+| Opus v1 (plain) | 100% | **76%** | 76% | 0 | 22 | FAIL |
+
+**Iteration 1 (Haiku v1 → v2)** added precise key definitions, the missing keys, and four
+worked examples. Real effect (strict): recall 71→86%, vocab 73→86%, **contradictions 2→0**,
+hallucination 0. Best run (Haiku v2) is still **below the acceptance bar** — the loop is not "done".
+
+`contradictions` = the run claimed an evaluated key with the WRONG value (regex: `permissible=100`
+from `100% - (9) 58.1%`; Haiku v1: `requested=37.1`, the prior-year change, instead of `47.5`).
+The old value-only scorer hid all of these.
+
+## Acceptance criteria (enforced by `--gate`, non-zero exit on fail)
+
+A run is acceptable only when **all** hold:
+- strict recall ≥ 0.90
+- vocab accuracy ≥ 0.90
+- contradictions = 0 (no wrong values on evaluated slots)
+- hallucination = 0 (every emitted value present verbatim in source)
+- (regression) no metric below the last committed baseline
+
+`.venv/bin/python scripts/eval_extraction.py --facts run.json --gate` → exit 0 pass / 1 fail.
+
+## Critical review — what this loop does NOT yet prove (honest caveats)
+
+1. **One filing.** All 46 anchors come from a single carrier (Accredited/Brazos). Results will not
+   generalise to other SERFF formats until the eval spans multiple carriers/states.
+2. **Truth provenance.** Eval values were partly produced by an LLM discovery pass and spot-checked
+   against source, not fully hand-labelled. Some anchors may themselves be wrong.
+3. **Train/test contamination.** The v2 few-shot examples are drawn from these same eval docs, so the
+   86% may include memorisation. **Needs a held-out doc set the prompt never sees.**
+4. **n = 1, non-deterministic.** Each model was run once; LLM output varies. The deltas are point
+   estimates with no variance. **Gate should require K-run stability (e.g. min over 3 runs).**
+5. **Coverage/scope/role under-scored.** Strict recall checks value+key; coverage accuracy is reported
+   but not gated (regex sets coverage on only 2/28 matches). role/scope/unit are not evaluated at all.
+6. **Not reproducible off this machine.** The eval reads `data/processed/` which is gitignored, so the
+   harness can't run on a fresh checkout or in CI. Commit a tiny redacted fixture corpus.
+7. **Recall, not precision, on volume.** A model emitting many extra facts isn't penalised beyond the
+   hallucination/none counts; there is no full-precision measure against an exhaustive label set.
 
 ## Current best prompt (Haiku v2 — iterate on this)
 
@@ -53,8 +87,13 @@ Worked examples:
 - **Key normalization:** map to catalogue keys; route `none` to the review queue.
 - **Regex cross-validation:** where the regex pipeline and the LLM agree on a value → high confidence; where they disagree (e.g. regex `100` vs LLM `58.1` on the permissible formula line) → flag for review.
 
-## Next iterations (open levers)
-1. Close the remaining 6 vocab misses (inspect which keys the scorer still rejects).
-2. Add a cheap **verification pass** (a second Haiku call to refute each fact) for the few residual errors.
-3. Promote the `experience_loss_ratio` / `earned_premium` / `incurred_loss` keys into the catalogue so these facts have a real home (currently scored via `key_aliases`).
-4. Wire the Haiku pass + guards into the pipeline as a real extractor stage (needs API integration), cross-checked against the regex layer.
+## Next iterations (open levers — prioritised by the critical review)
+1. **Rigour first (or the numbers don't mean anything):** add a held-out doc split (kill train/test
+   contamination), make `--gate` require K-run stability (min over ≥3 runs), and commit a tiny
+   redacted fixture corpus so the eval is reproducible/CI-able.
+2. **Close Haiku v2 to the bar:** strict recall 86→≥90 and vocab 86→≥90 — inspect the 6 vocab misses
+   and the labeled_series strict gap (7/13: values found but mislabelled/duplicated on series rows).
+3. Add a cheap **verification pass** (second Haiku call to refute each fact) for residual contradictions.
+4. Promote `experience_loss_ratio` / `earned_premium` / `incurred_loss` into the catalogue (currently via `key_aliases`).
+5. Broaden the eval to multiple carriers/states before trusting any generalisation claim.
+6. Wire the Haiku pass + guards into the pipeline as a real extractor stage, cross-checked against the regex layer.
