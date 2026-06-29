@@ -53,8 +53,12 @@ A run is acceptable only when **all** hold:
    generalise to other SERFF formats until the eval spans multiple carriers/states.
 2. **Truth provenance.** Eval values were partly produced by an LLM discovery pass and spot-checked
    against source, not fully hand-labelled. Some anchors may themselves be wrong.
-3. **Train/test contamination.** The v2 few-shot examples are drawn from these same eval docs, so the
-   86% may include memorisation. **Needs a held-out doc set the prompt never sees.**
+3. **Train/test contamination — MEASURED.** The v2 few-shot examples are drawn from eval docs
+   1/2/8/14, so the 86% was inflated. Splitting the eval (`heldout_docs` in the eval YAML) gives
+   the honest picture: **Haiku v2 in-prompt 100% (23/23) vs held-out 73% (17/23)** — a 27-point gap
+   confirming memorisation. Regex (a non-learning control) shows no gap (56% vs 69%). **Report
+   held-out recall as the real number, and judge future prompt iterations on it.** Open: few-shot
+   examples should come from OUTSIDE the eval set so the whole eval is held out.
 4. **n = 1, non-deterministic.** Each model was run once; LLM output varies. The deltas are point
    estimates with no variance. **Gate should require K-run stability (e.g. min over 3 runs).**
 5. **Coverage/scope/role under-scored.** Strict recall checks value+key; coverage accuracy is reported

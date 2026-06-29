@@ -26,6 +26,7 @@ _REAL = ROOT / "data/processed/text"
 TEXTDIR = _REAL if _REAL.exists() else (ROOT / "tests/golden/fixtures")
 EVAL = yaml.safe_load((ROOT / "tests/golden/extraction_eval.yml").read_text())
 ALIASES = EVAL.get("key_aliases", {})
+HELDOUT = set(EVAL.get("heldout_docs", []))
 
 ACCEPT = {"strict_recall": 0.90, "vocab_accuracy": 0.90, "max_contradictions": 0, "max_hallucination": 0}
 
@@ -88,7 +89,9 @@ def compute(run):
     strict = {b: [0, 0] for b in buckets}
     contradictions = []
     cov_ok = cov_n = vocab_ok = vocab_n = 0
+    split = {"in_prompt": [0, 0], "heldout": [0, 0]}  # [strict_hit, n] — generalisation check
     for doc, evals in EVAL["docs"].items():
+        sp = "heldout" if doc in HELDOUT else "in_prompt"
         ex = [{"v": first_float(e["value"]), "k": e.get("catalogue_key", "none"), "c": norm_cov(e.get("coverage"))}
               for e in run.get(doc, [])]
         ex = [e for e in ex if e["v"] is not None]
@@ -97,6 +100,7 @@ def compute(run):
             b = f["bucket"]
             loose[b][1] += 1
             strict[b][1] += 1
+            split[sp][1] += 1
             ev, ek, ec = f["value"], f["key"], f.get("coverage")
             if any(vmatch(ev, e["v"]) for e in ex):
                 loose[b][0] += 1
@@ -105,6 +109,7 @@ def compute(run):
                 i = cand[0]
                 used.add(i)
                 strict[b][0] += 1
+                split[sp][0] += 1
                 vocab_ok += 1
                 vocab_n += 1
                 if ec and ec != "none":
@@ -133,7 +138,7 @@ def compute(run):
         "strict_recall": sum(strict[b][0] for b in buckets) / max(n, 1),
         "vocab_ok": vocab_ok, "vocab_n": vocab_n, "vocab_accuracy": vocab_ok / max(vocab_n, 1),
         "cov_ok": cov_ok, "cov_n": cov_n, "contradictions": contradictions,
-        "emitted": total_f, "nonekey": nonekey, "hallucination": halluc,
+        "emitted": total_f, "nonekey": nonekey, "hallucination": halluc, "split": split,
     }
 
 
@@ -144,6 +149,10 @@ def score(run, label, gate=False):
     for b in m["buckets"]:
         print(f"    strict {b:16} {m['strict'][b][0]:>3}/{m['strict'][b][1]:<3}")
     print(f"  STRICT recall (value+key)   {m['strict_hit']}/{m['n']} ({int(100*m['strict_recall'])}%)   <- trustworthy")
+    sp = m["split"]
+    ip = 100 * sp["in_prompt"][0] // max(sp["in_prompt"][1], 1)
+    ho = 100 * sp["heldout"][0] // max(sp["heldout"][1], 1)
+    print(f"  strict by split             in-prompt {sp['in_prompt'][0]}/{sp['in_prompt'][1]} ({ip}%)  held-out {sp['heldout'][0]}/{sp['heldout'][1]} ({ho}%)  <- generalisation")
     print(f"  vocab accuracy              {m['vocab_ok']}/{m['vocab_n']} ({int(100*m['vocab_accuracy'])}%)")
     print(f"  coverage accuracy           {m['cov_ok']}/{m['cov_n']} (among strict matches)")
     print(f"  contradictions (wrong value){len(m['contradictions']):>3}")

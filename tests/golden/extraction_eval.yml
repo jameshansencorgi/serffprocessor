@@ -8,6 +8,12 @@
 # `key_aliases` lists acceptable alternative keys a model may use for a given expected_key
 # (so we score meaning, not exact string), and flags the common mis-mappings to penalise.
 
+# Train/test split for the generalisation check. The Haiku v2 few-shot prompt was designed
+# using lines from attachment_1/2/8/14 (experience row, permissible formula, coverage matrix,
+# expected/a-priori). Those are "in_prompt". The rest are held out — the prompt never saw their
+# specific lines/patterns, so held-out recall is the honest generalisation signal.
+heldout_docs: [attachment_4, attachment_10, attachment_12, attachment_13, attachment_15, attachment_18]
+
 key_aliases:
   experience_loss_ratio: [experience_loss_ratio, loss, incurred_loss_ratio]   # NOT expected_loss_ratio
   expected_loss_ratio: [expected_loss_ratio, permissible_loss_ratio, a_priori_loss_ratio]
