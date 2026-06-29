@@ -22,6 +22,24 @@ TEXTDIR = _REAL if _REAL.exists() else (ROOT / "tests/golden/fixtures")
 GOLDEN = yaml.safe_load((ROOT / "tests/golden/expected_facts.yml").read_text())
 
 
+def test_experience_loss_ratio_year_rows_extracted() -> None:
+    text = (
+        "Exhibit D Historical Experience - Commercial Auto Liability\n"
+        "Year Direct Premiums Written Earned Losses & DCCE Paid Incurred Ratio\n"
+        "2024 21,482,380 19,377,950 8,739,868 12,845,497 66.3%\n"
+        "2023 14,152,456 19,134,673 10,816,112 9,157,221 47.9%\n"
+    )
+    elr = [f for f in extract_rate_facts(text) if f.fact_type == "experience_loss_ratio"]
+    assert any(f.normalized_value == "66.3" for f in elr)
+    assert any(f.normalized_value == "47.9" for f in elr)
+
+
+def test_experience_loss_ratio_not_fired_outside_experience_exhibit() -> None:
+    # A bare year+percent line with no Exhibit-D experience context must not fire.
+    text = "Note: in 2024 the program grew 5.0%.\n"
+    assert not [f for f in extract_rate_facts(text) if f.fact_type == "experience_loss_ratio"]
+
+
 def test_regex_pipeline_gate_no_contradictions_and_recall_floor() -> None:
     """Deterministic CI gate on the regex path (runs via committed fixtures): no wrong
     values on evaluated slots, and strict recall does not regress below the committed floor."""

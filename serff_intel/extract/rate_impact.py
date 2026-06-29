@@ -85,6 +85,12 @@ _COVERAGE_LABEL_MAP = {
     "apd": "APD",
 }
 
+# Exhibit D experience rows: "<year> <premium> ... <loss & DCCE ratio>%". Deterministic because
+# the ratio is the trailing percent of a year row. Gated on the "Direct Premiums" Exhibit-D marker.
+# "Direct Premiums" survives only column-split in real PDF text; "DCCE Ratio" is the robust marker.
+EXPERIENCE_CONTEXT_RE = re.compile(r"dcce\s+ratio|direct\s+premiums", re.I)
+EXPERIENCE_ROW_RE = re.compile(r"^\s*((?:19|20)\d{2})\s+[\d,]{4,}(?:\s+\$?[\d,.]+){2,}\s+(-?\d+(?:\.\d+)?)\s*%\s*$")
+
 
 def extract_rate_facts(text: str, page_number: int | None = None) -> list[EvidenceFact]:
     facts: list[EvidenceFact] = []
@@ -118,7 +124,43 @@ def extract_rate_facts(text: str, page_number: int | None = None) -> list[Eviden
     facts.extend(_extract_written_premium_facts(text, page_number))
     facts.extend(_extract_credibility_facts(text, page_number))
     facts.extend(_extract_coverage_lcm_facts(text, page_number))
+    facts.extend(_extract_experience_loss_ratios(text, page_number))
     facts.extend(_extract_lcm_facts(text, page_number))
+    return facts
+
+
+def _extract_experience_loss_ratios(text: str, page_number: int | None = None) -> list[EvidenceFact]:
+    """Trailing loss & DCCE ratio of each Exhibit-D experience year row (table-derived, review-flagged)."""
+    if not EXPERIENCE_CONTEXT_RE.search(text):
+        return []
+    coverage = None
+    if re.search(r"(?:commercial\s+auto\s+|auto\s+)?liability", text, re.I):
+        coverage = "AL"
+    if re.search(r"physical\s+damage", text, re.I):
+        coverage = "APD"
+    facts: list[EvidenceFact] = []
+    for line in text.splitlines():
+        match = EXPERIENCE_ROW_RE.match(line)
+        if not match:
+            continue
+        ratio = match.group(2)
+        facts.append(
+            EvidenceFact(
+                fact_type="experience_loss_ratio",
+                fact_key=canonical_fact_key("experience_loss_ratio"),
+                fact_value=ratio,
+                normalized_value=ratio,
+                unit="percent",
+                coverage=coverage,
+                role="unknown",
+                confidence=0.7,
+                needs_review=True,
+                review_reason="low_confidence_table",
+                evidence_text=" ".join(line.split()),
+                page_number=page_number,
+                extraction_method="regex:experience_row",
+            )
+        )
     return facts
 
 

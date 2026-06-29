@@ -23,7 +23,7 @@ Always quote strict.
 
 | Run | overall strict | **held-out strict** | vocab | contradictions | hallucination | gate |
 | --- | ---: | ---: | ---: | ---: | ---: | :--: |
-| Regex pipeline | 63% | **69%** | 100% | 0 | 0 | FAIL |
+| Regex pipeline | 84% | **69%** | 100% | 0 | 0 | FAIL |  <- +deterministic experience-row extractor (grid_cell 1/11→11/11)
 | Haiku v1 (plain) | 71% | (contaminated) | 73% | 2 | 0 | FAIL |
 | Haiku v2 (few-shot from eval docs) | 86% | **73%** | 86% | 0 | 0 | FAIL |
 | Haiku v3 (synthetic few-shot, eval fully held-out) | 80% | **65%** | 84% | 2 | 0 | FAIL |
