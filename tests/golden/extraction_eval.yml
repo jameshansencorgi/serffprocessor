@@ -1,0 +1,81 @@
+# Extraction eval set for the test-and-improve loop.
+# Validated against the real Accredited Surety / Brazos filing source text.
+# Each fact: expected_key (the CORRECT catalogue label), value (numeric), coverage, bucket.
+# bucket = how the fact is laid out: labeled_scalar | labeled_series | grid_cell.
+# The scorer (scripts/eval_extraction.py) measures recall (value found), vocab accuracy
+# (matched fact carries an acceptable key), hallucination (value present in source), and cost.
+#
+# `key_aliases` lists acceptable alternative keys a model may use for a given expected_key
+# (so we score meaning, not exact string), and flags the common mis-mappings to penalise.
+
+key_aliases:
+  experience_loss_ratio: [experience_loss_ratio, loss, incurred_loss_ratio]   # NOT expected_loss_ratio
+  expected_loss_ratio: [expected_loss_ratio, permissible_loss_ratio, a_priori_loss_ratio]
+  requested_overall_rate_change: [requested_overall_rate_change, requested_rate_change, overall_rate_change]
+  indicated_rate_change: [indicated_rate_change, indicated_rate_level_change]
+  selected_rate_change: [selected_rate_change, selected_rate_level_change]
+
+docs:
+  attachment_1:
+    - {key: loss_cost_multiplier, value: 2.002, coverage: AL, bucket: labeled_series}
+    - {key: loss_cost_multiplier, value: 2.002, coverage: APD, bucket: labeled_series}
+
+  attachment_2:
+    - {key: experience_loss_ratio, value: 66.3, coverage: AL, bucket: grid_cell}
+    - {key: experience_loss_ratio, value: 47.9, coverage: AL, bucket: grid_cell}
+    - {key: experience_loss_ratio, value: 79.7, coverage: AL, bucket: grid_cell}
+    - {key: experience_loss_ratio, value: 72.0, coverage: AL, bucket: grid_cell}
+    - {key: experience_loss_ratio, value: 33.0, coverage: AL, bucket: grid_cell}
+    - {key: experience_loss_ratio, value: 91.5, coverage: AL, bucket: grid_cell}
+    - {key: experience_loss_ratio, value: 56.2, coverage: AL, bucket: grid_cell}
+    - {key: experience_loss_ratio, value: 64.2, coverage: AL, bucket: grid_cell}
+    - {key: experience_loss_ratio, value: 57.0, coverage: AL, bucket: grid_cell}
+    - {key: experience_loss_ratio, value: 43.1, coverage: AL, bucket: grid_cell}
+
+  attachment_4:
+    - {key: commission_expense_ratio, value: 25.7, coverage: AL, bucket: labeled_scalar}
+    - {key: other_acquisition_expense_ratio, value: 0.0, coverage: AL, bucket: labeled_scalar}
+    - {key: general_expense_ratio, value: 4.6, coverage: AL, bucket: labeled_scalar}
+    - {key: taxes_licenses_fees_ratio, value: 2.6, coverage: AL, bucket: labeled_scalar}
+    - {key: profit_provision, value: 9.0, coverage: AL, bucket: labeled_scalar}
+    - {key: permissible_loss_ratio, value: 58.1, coverage: AL, bucket: labeled_scalar}
+
+  attachment_8:
+    - {key: loss_cost_multiplier, value: 2.002, coverage: AL, bucket: labeled_scalar}
+    - {key: loss_cost_multiplier, value: 1.901, coverage: AL, bucket: labeled_scalar}
+    - {key: profit_provision, value: 9.0, coverage: AL, bucket: labeled_scalar}
+    - {key: permissible_loss_ratio, value: 58.1, coverage: AL, bucket: labeled_scalar}
+    - {key: risk_load, value: 5.3, coverage: AL, bucket: labeled_scalar}
+
+  attachment_10:
+    - {key: requested_overall_rate_change, value: 47.5, coverage: AL, bucket: labeled_scalar}
+    - {key: loss_cost_multiplier, value: 2.002, coverage: AL, bucket: labeled_scalar}
+    - {key: commission_expense_ratio, value: 25.7, coverage: AL, bucket: labeled_scalar}
+    - {key: general_expense_ratio, value: 4.6, coverage: AL, bucket: labeled_scalar}
+    - {key: taxes_licenses_fees_ratio, value: 2.6, coverage: AL, bucket: labeled_scalar}
+    - {key: profit_provision, value: 9.0, coverage: AL, bucket: labeled_scalar}
+    - {key: permissible_loss_ratio, value: 58.1, coverage: AL, bucket: labeled_scalar}
+
+  attachment_12:
+    - {key: selected_rate_change, value: 0.9, coverage: AL, bucket: labeled_series}
+    - {key: selected_rate_change, value: 6.8, coverage: AL, bucket: labeled_series}
+    - {key: selected_rate_change, value: 1.9, coverage: AL, bucket: labeled_series}
+    - {key: selected_rate_change, value: 6.6, coverage: AL, bucket: labeled_series}
+    - {key: selected_rate_change, value: 7.8, coverage: AL, bucket: labeled_series}
+    - {key: indicated_rate_change, value: 20.8, coverage: AL, bucket: labeled_series}
+    - {key: on_level_factor, value: 1.524, coverage: AL, bucket: labeled_series}
+
+  attachment_14:
+    - {key: frequency_trend, value: 3.6, coverage: AL, bucket: labeled_series}
+    - {key: severity_trend, value: 10.1, coverage: AL, bucket: labeled_series}
+    - {key: indicated_rate_change, value: 116.2, coverage: AL, bucket: labeled_scalar}
+    - {key: permissible_loss_ratio, value: 58.8, coverage: AL, bucket: labeled_scalar}
+    - {key: expected_loss_ratio, value: 121.7, coverage: AL, bucket: labeled_scalar}
+    - {key: expected_loss_ratio, value: 90.9, coverage: AL, bucket: labeled_scalar}
+
+  attachment_15:
+    - {key: frequency_trend, value: 3.6, coverage: AL, bucket: labeled_series}
+    - {key: severity_trend, value: 10.1, coverage: AL, bucket: labeled_series}
+
+  attachment_18:
+    - {key: requested_overall_rate_change, value: 47.5, coverage: AL, bucket: grid_cell}
