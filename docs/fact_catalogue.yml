@@ -585,6 +585,33 @@ fact_groups:
         current_status: missing
         required_dimensions: [coverage]
 
+  historical_experience:
+    tier: 1
+    destination_table: experience_fact
+    description: Per-year historical experience from Exhibit D (premium, loss, loss ratio).
+    facts:
+      experience_loss_ratio:
+        label: Historical incurred loss & DCCE ratio (by year)
+        unit: percent
+        datatype: decimal
+        importance: high
+        current_status: partial
+        required_dimensions: [coverage, experience_period, scope]
+      earned_premium:
+        label: Direct earned premium (by year)
+        unit: dollars
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage, experience_period, scope]
+      incurred_loss:
+        label: Direct incurred losses & DCCE (by year)
+        unit: dollars
+        datatype: decimal
+        importance: high
+        current_status: missing
+        required_dimensions: [coverage, experience_period, scope]
+
   territory_definitions:
     tier: 2
     destination_table: territory_definition
