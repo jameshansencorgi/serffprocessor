@@ -192,6 +192,12 @@ def _select_percent_value(
         preceding = region[prev_end : token.start()].lower()
         value = token.group(1)
         value_start = label_end + token.start(1)
+        # "100% - (9) 58.1%": the 100% is a complement base in a subtraction formula,
+        # not the value. Skip a 100% immediately followed by a minus operator.
+        if abs(float(value) - 100.0) < 0.01 and region[token.end() : token.end() + 4].lstrip().startswith("-"):
+            skipped_distractor = True
+            prev_end = token.end()
+            continue
         if fallback is None:
             fallback = (value, value_start)
         if any(cue in preceding for cue in DISTRACTOR_CUES):

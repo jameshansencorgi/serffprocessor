@@ -61,6 +61,15 @@ def test_coverage_lcm_does_not_fire_outside_lcm_section() -> None:
     assert not coverage_lcms
 
 
+def test_permissible_loss_ratio_takes_formula_result_not_complement_base() -> None:
+    # "= 100% - (9) 58.1%": the 100% is the complement base, not the value. Take 58.1.
+    facts = extract_rate_facts("(10) Permissible Loss & LAE Ratio = 100% - (9) 58.1%\n")
+    plr = [f for f in facts if f.fact_type == "permissible_loss_ratio"]
+    assert plr
+    assert plr[0].normalized_value == "58.1"
+    assert all(f.normalized_value != "100" for f in plr)
+
+
 def test_selected_a_priori_maps_to_expected_loss_ratio() -> None:
     facts = extract_rate_facts("Selected A-Priori 90.9%\n")
     elr = [f for f in facts if f.fact_type == "expected_loss_ratio"]
