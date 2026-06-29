@@ -28,7 +28,9 @@ EVAL = yaml.safe_load((ROOT / "tests/golden/extraction_eval.yml").read_text())
 ALIASES = EVAL.get("key_aliases", {})
 HELDOUT = set(EVAL.get("heldout_docs", []))
 
-ACCEPT = {"strict_recall": 0.90, "vocab_accuracy": 0.90, "max_contradictions": 0, "max_hallucination": 0}
+# Acceptance bar measures GENERALISATION (held-out strict recall), not the memorisation-inflated
+# overall number — see the train/test split finding in docs/extraction_eval_loop.md.
+ACCEPT = {"heldout_recall": 0.90, "vocab_accuracy": 0.90, "max_contradictions": 0, "max_hallucination": 0}
 
 _COV = {
     "liability": "AL", "auto liability": "AL", "commercial auto liability": "AL", "al": "AL",
@@ -139,6 +141,7 @@ def compute(run):
         "vocab_ok": vocab_ok, "vocab_n": vocab_n, "vocab_accuracy": vocab_ok / max(vocab_n, 1),
         "cov_ok": cov_ok, "cov_n": cov_n, "contradictions": contradictions,
         "emitted": total_f, "nonekey": nonekey, "hallucination": halluc, "split": split,
+        "heldout_recall": split["heldout"][0] / max(split["heldout"][1], 1),
     }
 
 
@@ -161,8 +164,8 @@ def score(run, label, gate=False):
     print(f"  facts emitted               {m['emitted']}  ({m['nonekey']} key='none', {m['hallucination']} value-not-in-source)")
     if gate:
         fails = []
-        if m["strict_recall"] < ACCEPT["strict_recall"]:
-            fails.append(f"strict_recall {m['strict_recall']:.2f} < {ACCEPT['strict_recall']}")
+        if m["heldout_recall"] < ACCEPT["heldout_recall"]:
+            fails.append(f"heldout_recall {m['heldout_recall']:.2f} < {ACCEPT['heldout_recall']}")
         if m["vocab_accuracy"] < ACCEPT["vocab_accuracy"]:
             fails.append(f"vocab_accuracy {m['vocab_accuracy']:.2f} < {ACCEPT['vocab_accuracy']}")
         if len(m["contradictions"]) > ACCEPT["max_contradictions"]:

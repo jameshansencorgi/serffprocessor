@@ -39,7 +39,7 @@ The old value-only scorer hid all of these.
 ## Acceptance criteria (enforced by `--gate`, non-zero exit on fail)
 
 A run is acceptable only when **all** hold:
-- strict recall ≥ 0.90
+- **held-out** strict recall ≥ 0.90 (generalisation, not the memorisation-inflated overall number)
 - vocab accuracy ≥ 0.90
 - contradictions = 0 (no wrong values on evaluated slots)
 - hallucination = 0 (every emitted value present verbatim in source)
